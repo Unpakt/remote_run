@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+require 'lib/host'
+require 'lib/hosts'
+require 'lib/lock'
+require 'lib/remote_file'
+require 'lib/suites'
+require 'lib/configuration'
+
+$hostname = `hostname`.strip
+$this_run = `echo $RANDOM`.strip
+$config = Configuration.new do |config|
+  config.remote_path = "~/workspace/remote/#{$hostname}"
+  config.local_path = Dir.getwd
+end
+
+@hosts = Hosts.new do |hosts|
+  hosts.add("elizabeth")
+  hosts.add("bedford")
+end
+
+@suites = Suites.new do |suite|
+  suite.add("source ~/.profile; rvm use ree-1.8.7-2010.02@casebook; bundle install; bundle exec spec spec/models/api/")
+  suite.add("source ~/.profile; rvm use ree-1.8.7-2010.02@casebook; bundle install; bundle exec spec spec/models/date_strategy/")
+end
+
+trap("SIGINT") do
+  @hosts.all.each do |host|
+    host.unlock
+  end
+end
+
+threads = []
+results = []
+
+while @suites.more?
+  host = @hosts.free_host
+  sleep(0.1)
+  next unless host
+
+  if host.lock
+    suite = @suites.find_suite
+    threads << Thread.new do
+      this_host = host.dup
+      results << this_host.run(suite)
+      this_host.unlock
+    end
+  end
+end
+
+threads.map(&:join)
+
+if results.all? { |result| result == true }
+  puts "Suite passed."
+else
+  puts "Suite failed."
+end
