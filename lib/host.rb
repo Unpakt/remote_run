@@ -4,10 +4,6 @@ class Host
     @lock = Lock.new(@hostname, $runner.local_hostname, $runner.identifier)
   end
 
-  def name
-    @hostname
-  end
-
   def lock
     @lock.get
     @lock.locked_by_me?
@@ -31,13 +27,13 @@ class Host
   private
 
   def copy_codebase
-    puts "Copying the codebase from #{$runner.local_path} to #{name}:#{$runner.remote_path}"
-    system("ssh #{name} 'mkdir -p #{$runner.remote_path}'")
-    system("rsync -a #{$runner.local_path}/ #{name}:#{$runner.remote_path}/")
+    puts "Copying the codebase from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}"
+    system("ssh #{@hostname} 'mkdir -p #{$runner.remote_path}'")
+    system("rsync -a #{$runner.local_path}/ #{@hostname}:#{$runner.remote_path}/")
   end
 
   def run_suite(suite)
-    puts "Running '#{suite}' on #{name}"
+    puts "Running '#{suite}' on #{@hostname}"
     command = "ssh #{@hostname} 'cd #{$runner.remote_path}; #{suite}'"
     system(command)
     $?.exitstatus

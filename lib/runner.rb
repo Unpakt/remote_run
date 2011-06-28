@@ -1,20 +1,18 @@
-
 class Runner
   attr_accessor :remote_path, :local_path, :local_hostname, :identifier
 
   def initialize
-    hostname = `hostname`.strip
-    identifier = `echo $RANDOM`.strip
-
-    @identifier = identifier
-    @local_hostname = hostname
-    @suite_manager = SuiteManager.new
+    @identifier = `echo $RANDOM`.strip
+    @local_hostname = `hostname`.strip
+    @task_manager = TaskManager.new
     @host_manager = HostManager.new
     $runner = self
     yield self
+  end
 
-    raise "must have a remote path set: e.g. config.remote_path = '~/workspace/cool-project'" unless remote_path
-    raise "must have a local path set: e.g. config.local_path = '~/workspace/cool-project'" unless local_path
+  def self.run(&block)
+    runner = new(&block)
+    runner.run
   end
 
   def hosts=(hostnames)
@@ -23,9 +21,9 @@ class Runner
     end
   end
 
-  def suites=(shell_commands)
+  def tasks=(shell_commands)
     shell_commands.each do |shell_command|
-      @suite_manager.add(shell_command)
+      @task_manager.add(shell_command)
     end
   end
 
@@ -38,16 +36,17 @@ class Runner
     end
 
     children = []
-    while @suite_manager.more?
+
+    while @task_manager.more?
       host = @host_manager.free_host
       sleep(0.1)
       next unless host
 
       if host.lock
-        suite = @suite_manager.find_suite
+        task = @task_manager.find_task
         children << fork do
           this_host = host.dup
-          status = this_host.run(suite)
+          status = this_host.run(task)
           this_host.unlock
           exit(status)
         end
@@ -65,9 +64,9 @@ class Runner
     end
 
     if results.all? { |result| result == 0 }
-      puts "Suite passed."
+      puts "Task passed."
     else
-      puts "Suite failed."
+      puts "Task failed."
     end
   end
 
@@ -89,21 +88,21 @@ class Runner
     end
   end
 
-  class SuiteManager
+  class TaskManager
     def initialize
-      @suites = []
+      @tasks = []
     end
 
     def add(script)
-      @suites.push(script)
+      @tasks.push(script)
     end
 
-    def find_suite
-      @suites.pop
+    def find_task
+      @tasks.pop
     end
 
     def more?
-      @suites.size > 0
+      @tasks.size > 0
     end
   end
 end
