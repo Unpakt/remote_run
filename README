@@ -10,6 +10,7 @@ What I want it to do:
 
 * say which task fails
 * say which hosts are in use and which are locked during the run
+* only try hosts that respond
 
 
 Example: 
@@ -27,4 +28,5 @@ Runner.run do |config|
     "#{setup} bundle exec spec spec/models/api/"
   ]
 end
+
 
