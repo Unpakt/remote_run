@@ -1,4 +1,6 @@
 class Host
+  attr_reader :hostname
+
   def initialize(hostname)
     @hostname = hostname
     @lock = Lock.new(@hostname, $runner.local_hostname, $runner.identifier)
@@ -6,11 +8,11 @@ class Host
 
   def lock
     @lock.get
-    @lock.locked_by_me?
+    locked_by_me?
   end
 
   def unlock
-    if @lock.locked_by_me?
+    if locked_by_me?
       @lock.release
     end
   end
@@ -22,6 +24,10 @@ class Host
 
   def locked?
     @lock.locked?
+  end
+
+  def locked_by_me?
+    @lock.locked_by_me?
   end
 
   private

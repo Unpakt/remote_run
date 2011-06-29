@@ -1,0 +1,30 @@
+This is intended to be a simple remote shell script runner.
+
+what it does:
+
+* rsyncs your current directory to a remote machine
+* runs a shell command of your choice
+* locks other machines from being able to use the same machine at the same time
+
+What I want it to do:
+
+* say which task fails
+* say which hosts are in use and which are locked during the run
+
+
+Example: 
+
+setup = "source ~/.profile; rvm use ree-1.8.7-2010.02@casebook; bundle install;"
+
+Dir["features/**/*.feature"]
+
+Runner.run do |config|
+  config.remote_path = "~/workspace/remote/#{`hostname`.strip}"
+  config.local_path = Dir.getwd
+  config.hosts = ["elizabeth", "bedford"]
+  config.tasks = [
+    "#{setup} bundle exec spec spec/models/api/",
+    "#{setup} bundle exec spec spec/models/api/"
+  ]
+end
+

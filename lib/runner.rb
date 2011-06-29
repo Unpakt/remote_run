@@ -28,18 +28,16 @@ class Runner
   end
 
   def run
-    at_exit do
-      duped_hosts = @host_manager.all.map { |host| host.dup }
-      duped_hosts.each do |host|
-        host.unlock
-      end
-    end
-
+    @host_manager.unlock_on_exit
     children = []
 
     while @task_manager.more?
+      puts "Locked Hosts: " + @host_manager.locked_hosts.map(&:hostname).inspect
+      puts "Hosts Locked by Me: " + @host_manager.hosts_locked_by_me.map(&:hostname).inspect
+      puts "Unlocked Hosts: " + @host_manager.unlocked_hosts.map(&:hostname).inspect
+
       host = @host_manager.free_host
-      sleep(0.1)
+      sleep(1)
       next unless host
 
       if host.lock
@@ -84,7 +82,28 @@ class Runner
     end
 
     def free_host
-      @hosts.select { |host| !host.locked? }.first
+      unlocked_hosts.first
+    end
+
+    def locked_hosts
+      @hosts.select { |host| host.locked? }
+    end
+
+    def unlocked_hosts
+      @hosts - locked_hosts
+    end
+
+    def hosts_locked_by_me
+      @hosts.select { |host| host.locked_by_me? }
+    end
+
+    def unlock_on_exit
+      at_exit do
+        duped_hosts = all.map { |host| host.dup }
+        duped_hosts.each do |host|
+          host.unlock
+        end
+      end
     end
   end
 
