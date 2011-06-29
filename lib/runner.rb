@@ -6,6 +6,8 @@ class Runner
     @local_hostname = `hostname`.strip
     @task_manager = TaskManager.new
     @host_manager = HostManager.new
+    @local_path = Dir.getwd
+    @remote_path = "/tmp/remote/#{`hostname`.strip}"
     $runner = self
     yield self
   end
@@ -31,14 +33,9 @@ class Runner
     @host_manager.unlock_on_exit
     children = []
 
-    while @task_manager.more?
-      puts "Locked Hosts: " + @host_manager.locked_hosts.map(&:hostname).inspect
-      puts "Hosts Locked by Me: " + @host_manager.hosts_locked_by_me.map(&:hostname).inspect
-      puts "Unlocked Hosts: " + @host_manager.unlocked_hosts.map(&:hostname).inspect
-
-      host = @host_manager.free_host
+    while @task_manager.has_more_tasks?
       sleep(1)
-      next unless host
+      next unless host = @host_manager.free_host
 
       if host.lock
         task = @task_manager.find_task
@@ -120,7 +117,7 @@ class Runner
       @tasks.pop
     end
 
-    def more?
+    def has_more_tasks?
       @tasks.size > 0
     end
   end
