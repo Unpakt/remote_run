@@ -34,14 +34,11 @@ class Runner
     @host_manager.unlock_on_exit
     children = []
 
-    puts "running"
     while @task_manager.has_more_tasks?
-      puts @host_manager.all.map(&:is_up?).inspect
       sleep(1)
       next unless host = @host_manager.free_host
 
       if host.lock
-        puts "locked"
         task = @task_manager.find_task
         children << fork do
           this_host = host.dup
