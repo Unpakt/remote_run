@@ -30,17 +30,21 @@ class Host
     @lock.locked_by_me?
   end
 
+  def is_up?
+    Ping.pingecho(@machine_name, timeout=2)
+  end
+
   private
 
   def copy_codebase
     puts "Copying the codebase from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}"
-    system("ssh #{@hostname} 'mkdir -p #{$runner.remote_path}'")
-    system("rsync -a #{$runner.local_path}/ #{@hostname}:#{$runner.remote_path}/")
+    system("ssh #{$runner.login_as}@#{@hostname} 'mkdir -p #{$runner.remote_path}'")
+    system("rsync -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
   end
 
   def run_suite(suite)
     puts "Running '#{suite}' on #{@hostname}"
-    command = "ssh #{@hostname} 'cd #{$runner.remote_path}; #{suite}'"
+    command = "ssh #{$runner.login_as}@#{@hostname} 'cd #{$runner.remote_path}; #{suite}'"
     system(command)
     $?.exitstatus
   end
@@ -80,19 +84,19 @@ class Host
       end
 
       def exist?(file_path)
-        `ssh #{@hostname} 'test -f #{file_path}; echo $?'`.strip == "0"
+        `ssh #{$runner.login_as}@#{@hostname} 'test -f #{file_path}; echo $?'`.strip == "0"
       end
 
       def read(file_path)
-        `ssh #{@hostname} 'cat #{file_path}'`
+        `ssh #{$runner.login_as}@#{@hostname} 'cat #{file_path}'`
       end
 
       def write(file_path, text)
-        `ssh #{@hostname} 'echo #{text} > #{file_path}'`
+        `ssh #{$runner.login_as}@#{@hostname} 'echo #{text} > #{file_path}'`
       end
 
       def delete(file_path)
-        `ssh #{@hostname} 'rm #{file_path}'`
+        `ssh #{$runner.login_as}@#{@hostname} 'rm #{file_path}'`
       end
     end
   end

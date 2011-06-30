@@ -1,5 +1,5 @@
 class Runner
-  attr_accessor :remote_path, :local_path, :local_hostname, :identifier
+  attr_accessor :remote_path, :local_path, :local_hostname, :identifier, :login_as
 
   def initialize
     @identifier = `echo $RANDOM`.strip
@@ -7,6 +7,7 @@ class Runner
     @task_manager = TaskManager.new
     @host_manager = HostManager.new
     @local_path = Dir.getwd
+    @login_as = `whoami`.strip
     @remote_path = "/tmp/remote/#{`hostname`.strip}"
     $runner = self
     yield self
@@ -33,11 +34,14 @@ class Runner
     @host_manager.unlock_on_exit
     children = []
 
+    puts "running"
     while @task_manager.has_more_tasks?
+      puts @host_manager.all.map(&:is_up?).inspect
       sleep(1)
       next unless host = @host_manager.free_host
 
       if host.lock
+        puts "locked"
         task = @task_manager.find_task
         children << fork do
           this_host = host.dup
@@ -75,7 +79,10 @@ class Runner
     end
 
     def add(hostname)
-      @hosts << Host.new(hostname)
+      host = Host.new(hostname)
+      if host.is_up?
+        @hosts << host
+      end
     end
 
     def free_host

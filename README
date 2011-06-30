@@ -10,8 +10,8 @@ What I want it to do:
 
 * say which task fails
 * say which hosts are in use and which are locked during the run
-* only try hosts that respond
-
+* CLI for showing which machines are locked
+* CLI for showing which machines are locked by me
 
 Example: 
 
