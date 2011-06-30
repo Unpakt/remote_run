@@ -31,7 +31,7 @@ class Host
   end
 
   def is_up?
-    Ping.pingecho(@machine_name, timeout=2) && `ssh -o ConnectTimeout=3 #{@hostname} "echo 'foo'; echo $?"`.strip == "0"
+    Ping.pingecho(@machine_name, timeout=2) && `ssh -o ConnectTimeout=3 #{$runner.login_as}@#{@hostname} "echo 'foo'; echo $?"`.strip == "0"
   end
 
   private
