@@ -18,6 +18,10 @@ class Runner
     runner.run
   end
 
+  def hosts
+    @host_manager.all
+  end
+
   def hosts=(hostnames)
     hostnames.each do |hostname|
       @host_manager.add(hostname)
