@@ -37,7 +37,7 @@ class Host
   private
 
   def copy_codebase
-    puts "Copying the codebase from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}"
+    puts "Copying from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}"
     system("ssh #{$runner.login_as}@#{@hostname} 'mkdir -p #{$runner.remote_path}'")
     system("rsync -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
   end
