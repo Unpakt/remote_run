@@ -77,9 +77,7 @@ class Runner
   private
 
   def display_info
-    @start_time = Time.now
-    time_elapsed = @start_time - Time.now
-    if time_elapsed > 15
+    if !@start_time || (@start_time - Time.now > 15)
       puts "#{@task_manager.all.size} tasks left."
       puts "#{@host_manager.unlocked_hosts.map(&:hostname).join(", ")} are free."
       puts "#{@host_manager.locked_hosts.map(&:hostname).join(", ")} are locked."
