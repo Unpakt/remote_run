@@ -17,9 +17,9 @@ class Host
     end
   end
 
-  def run(suite)
+  def run(task)
     copy_codebase
-    run_suite(suite)
+    run_task(task)
   end
 
   def locked?
@@ -42,9 +42,9 @@ class Host
     system("rsync -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
   end
 
-  def run_suite(suite)
-    puts "Running '#{suite}' on #{@hostname}"
-    command = "ssh #{$runner.login_as}@#{@hostname} 'cd #{$runner.remote_path}; #{suite}'"
+  def run_task(task)
+    puts "Running '#{task}' on #{@hostname}"
+    command = %Q{ssh #{$runner.login_as}@#{@hostname} 'cd #{$runner.remote_path}; #{task}' 2>&1 | sed -e "s/^/[#{@hostname}] /"}
     system(command)
     $?.exitstatus
   end
