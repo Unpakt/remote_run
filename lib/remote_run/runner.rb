@@ -8,6 +8,7 @@ class Runner
     @host_manager = HostManager.new
     @local_path = Dir.getwd
     @login_as = `whoami`.strip
+    @timer = 0
     @remote_path = "/tmp/remote/#{`hostname`.strip}"
     $runner = self
     yield self
@@ -38,18 +39,9 @@ class Runner
     @host_manager.unlock_on_exit
     children = []
 
-    timer = 0
-
     while @task_manager.has_more_tasks?
-      sleep(1)
-      timer += 1
-      if timer == 15
-        puts "#{@task_manager.all.size} tasks left."
-        puts "#{@host_manager.unlocked_hosts.map(&:hostname).join(",")} are free."
-        puts "#{@host_manager.locked_hosts.map(&:hostname).join(",")} are locked."
-        puts "#{@host_manager.hosts_locked_by_me.map(&:hostname).join(",")} are locked by me."
-        timer = 0
-      end
+      sleep(0.5)
+      display_info
       next unless host = @host_manager.free_host
 
       if host.lock
@@ -65,6 +57,8 @@ class Runner
 
     results = []
     while children.length > 0
+      sleep(0.1)
+      display_info
       children.each do |child_pid|
         if Process.waitpid(child_pid, Process::WNOHANG)
           results << $?.exitstatus
@@ -77,6 +71,20 @@ class Runner
       puts "Task passed."
     else
       puts "Task failed."
+    end
+  end
+
+  private
+
+  def display_info
+    @start_time = Time.now
+    time_elapsed = @start_time - Time.now
+    if time_elapsed > 15
+      puts "#{@task_manager.all.size} tasks left."
+      puts "#{@host_manager.unlocked_hosts.map(&:hostname).join(", ")} are free."
+      puts "#{@host_manager.locked_hosts.map(&:hostname).join(", ")} are locked."
+      puts "#{@host_manager.hosts_locked_by_me.map(&:hostname).join(", ")} are locked by me."
+      @start_time = Time.now
     end
   end
 
