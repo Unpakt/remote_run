@@ -1,3 +1,3 @@
-require File.join(File.dirname(__FILE__), "lib", "host")
-require File.join(File.dirname(__FILE__), "lib", "runner")
+require File.join(File.dirname(__FILE__), "host")
+require File.join(File.dirname(__FILE__), "runner")
 require 'ping'
