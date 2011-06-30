@@ -35,10 +35,11 @@ class Host
     result = `ssh -o ConnectTimeout=3 #{$runner.login_as}@#{@hostname} "echo 'success'"`.strip
     if result == "success"
       puts "#{@hostname} is up"
+      return true
     else
       puts "#{@hostname} is down: #{result}"
+      return false
     end
-    result == "0"
   end
 
   private
