@@ -31,7 +31,6 @@ class Host
   end
 
   def is_up?
-    return false unless Ping.pingecho(@machine_name, timeout=2)
     result = `ssh -o ConnectTimeout=3 #{$runner.login_as}@#{@hostname} "echo 'success'"`.strip
     if result == "success"
       puts "#{@hostname} is up"
