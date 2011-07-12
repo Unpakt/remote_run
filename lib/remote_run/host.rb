@@ -51,7 +51,7 @@ class Host
 
   def run_task(task)
     puts "Running '#{task}' on #{@hostname}"
-    command = %Q{ssh #{$runner.login_as}@#{@hostname} 'cd #{$runner.remote_path}; #{task}' 2>&1 | sed -e "s/^/[#{@hostname}] /"}
+    command = %Q{ssh #{$runner.login_as}@#{@hostname} 'cd #{$runner.remote_path}; #{task}' 2>&1}
     system(command)
     $?.exitstatus
   end
