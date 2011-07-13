@@ -36,11 +36,18 @@ class Runner
     end
   end
 
-  def display_status
+  def display_task_status
+    display_status("Waiting on #{@task_manager.count} tasks to start.  Trying #{@hosts.map(&:hostname).join(", ")}.")
+  end
+
+  def display_pid_status
+    display_status("Waiting on pids: #{@children.inspect}")
+  end
+
+  def display_status(message)
     now = Time.now.strftime("%S")[0]
     unless now == @last_timestamp
-      puts "\nWaiting on pids: #{@children.inspect}"
-      puts "\nWaiting on #{@task_manager.count} tasks to start."
+      puts message
       @last_timestamp = now
     end
   end
@@ -48,19 +55,20 @@ class Runner
   def run
     @host_manager.unlock_on_exit
     @children = []
-    hosts = []
+    @hosts = []
 
     while @task_manager.has_more_tasks?
       hosts = @host_manager.hosts if hosts.empty?
-      display_status
+      display_task_status
 
       if host = hosts.sample
-        hosts.delete(host)
+        @hosts.delete(host)
         if host.lock
           task = @task_manager.find_task
           @children << fork do
             this_host = host.dup
             status = this_host.run(task)
+            host.unlock
             exit(status)
           end
         else
@@ -71,7 +79,7 @@ class Runner
 
     results = []
     while @children.length > 0
-      display_status
+      display_pid_status
 
       @children.each do |child_pid|
         if Process.waitpid(child_pid, Process::WNOHANG)
