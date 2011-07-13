@@ -40,7 +40,7 @@ class Runner
     children = []
 
     while @task_manager.has_more_tasks?
-      sleep(0.5)
+      sleep(0.1)
       display_info
       next unless host = @host_manager.free_host
 
