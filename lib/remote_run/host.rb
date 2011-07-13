@@ -1,4 +1,5 @@
 class Host
+  FAIL = 1
   attr_reader :hostname
 
   def initialize(hostname)
@@ -18,7 +19,7 @@ class Host
   end
 
   def run(task)
-    copy_codebase
+    return FAIL unless copy_codebase
     run_task(task)
   end
 
@@ -46,10 +47,13 @@ class Host
   def copy_codebase
     puts "Copying from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}"
     system("ssh #{$runner.login_as}@#{@hostname} 'mkdir -p #{$runner.remote_path}'")
-    unless system("rsync --timeout=60 -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
+    if system("rsync --timeout=60 -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
+      puts "Finished copying to #{@hostname}"
+      return true
+    else
       puts "rsync failed on #{@hostname}."
+      return false
     end
-    puts "Finished copying to #{@hostname}"
   end
 
   def run_task(task)
