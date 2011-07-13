@@ -47,7 +47,6 @@ class Runner
         children << fork do
           this_host = host.dup
           status = this_host.run(task)
-          this_host.unlock
           exit(status)
         end
       end
