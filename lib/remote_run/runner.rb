@@ -59,7 +59,7 @@ class Runner
     @hosts = []
 
     while @task_manager.has_more_tasks?
-      @hosts = @host_manager.hosts if @hosts.empty?
+      @hosts = @host_manager.hosts.dup if @hosts.empty?
       display_task_status
 
       if host = @hosts.sample
