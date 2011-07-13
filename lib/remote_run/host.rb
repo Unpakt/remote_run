@@ -46,7 +46,10 @@ class Host
   def copy_codebase
     puts "Copying from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}"
     system("ssh #{$runner.login_as}@#{@hostname} 'mkdir -p #{$runner.remote_path}'")
-    system("rsync --timeout=60 -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
+    unless system("rsync --timeout=60 -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
+      puts "rsync failed on #{@hostname}."
+    end
+    puts "Finished copying to #{@hostname}"
   end
 
   def run_task(task)
