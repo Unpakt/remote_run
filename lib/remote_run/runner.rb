@@ -42,7 +42,7 @@ class Runner
   end
 
   def display_pid_status
-    display_status("\nWaiting on #{@children.inspect} tasks to finish. #{@children.inspect}")
+    display_status("\nWaiting on #{@children.length} tasks to finish. #{@children.inspect}")
   end
 
   def display_status(message)
