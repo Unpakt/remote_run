@@ -38,11 +38,11 @@ class Runner
 
   def display_task_status
     trying = "Trying #{@hosts.map(&:hostname).join(", ")}." unless @hosts.empty?
-    display_status("Waiting on #{@task_manager.count} tasks to start. #{trying if trying}")
+    display_status("\nWaiting on #{@task_manager.count} tasks to start. #{trying if trying}")
   end
 
   def display_pid_status
-    display_status("Waiting on pids: #{@children.inspect}")
+    display_status("\nWaiting on pids: #{@children.inspect}")
   end
 
   def display_status(message)
