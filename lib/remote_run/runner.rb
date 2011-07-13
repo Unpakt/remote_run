@@ -56,7 +56,7 @@ class Runner
     n = 0
     while children.length > 0
       sleep(0.1)
-      puts children.inspect if n % 100 == 0
+      puts "\nWaiting on pids: #{children.inspect}" if n % 100 == 0
       children.each do |child_pid|
         if Process.waitpid(child_pid, Process::WNOHANG)
           results << $?.exitstatus
