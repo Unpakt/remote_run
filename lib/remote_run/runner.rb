@@ -38,16 +38,22 @@ class Runner
   def run
     @host_manager.unlock_on_exit
     children = []
+    hosts = []
 
     while @task_manager.has_more_tasks?
-      sleep(0.1) and next unless host = @host_manager.free_host
+      hosts = @host_manager.hosts if hosts.empty?
 
-      if host.lock
-        task = @task_manager.find_task
-        children << fork do
-          this_host = host.dup
-          status = this_host.run(task)
-          exit(status)
+      if host = hosts.sample
+        hosts.delete(host)
+        if host.lock
+          task = @task_manager.find_task
+          children << fork do
+            this_host = host.dup
+            status = this_host.run(task)
+            exit(status)
+          end
+        else
+          sleep(0.1)
         end
       end
     end
@@ -55,15 +61,20 @@ class Runner
     results = []
     n = 0
     while children.length > 0
-      sleep(0.1)
-      puts "\nWaiting on pids: #{children.inspect}" if n % 100 == 0
+      if n % 100 == 0
+        puts "\nWaiting on pids: #{children.inspect}"
+        puts "\nWaiting on #{@task_manager.count} tasks to start."
+      end
+
       children.each do |child_pid|
         if Process.waitpid(child_pid, Process::WNOHANG)
           results << $?.exitstatus
           children.delete(child_pid)
         end
       end
+
       n = n + 1
+      sleep(0.1)
     end
 
     if results.all? { |result| result == 0 }
@@ -91,20 +102,8 @@ class Runner
       end
     end
 
-    def free_host
-      unlocked_hosts.first
-    end
-
-    def locked_hosts
-      @hosts.select { |host| host.locked? }
-    end
-
-    def unlocked_hosts
-      @hosts - locked_hosts
-    end
-
-    def hosts_locked_by_me
-      @hosts.select { |host| host.locked_by_me? }
+    def hosts
+      @hosts
     end
 
     def unlock_on_exit
@@ -132,6 +131,10 @@ class Runner
 
     def all
       @tasks
+    end
+
+    def count
+      @tasks.length
     end
 
     def has_more_tasks?
