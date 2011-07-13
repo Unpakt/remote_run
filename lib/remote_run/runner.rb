@@ -10,6 +10,7 @@ class Runner
     @login_as = `whoami`.strip
     @timer = 0
     @remote_path = "/tmp/remote/#{`hostname`.strip}"
+    @last_timestamp = Time.now.strftime("%S")[0]
     $runner = self
     yield self
   end
