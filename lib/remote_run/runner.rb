@@ -1,5 +1,5 @@
 class Runner
-  attr_accessor :remote_path, :local_path, :local_hostname, :identifier, :login_as
+  attr_accessor :remote_path, :local_path, :local_hostname, :identifier, :login_as, :rsync_exclude
 
   def initialize
     @identifier = `echo $RANDOM`.strip
@@ -8,8 +8,9 @@ class Runner
     @host_manager = HostManager.new
     @local_path = Dir.getwd
     @login_as = `whoami`.strip
+    @rsync_exclude = []
     @timer = 0
-    @remote_path = "/tmp/remote/#{`hostname`.strip}"
+    @remote_path = "/tmp/remote"
     @last_timestamp = Time.now.strftime("%S")[0]
     $runner = self
     yield self

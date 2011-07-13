@@ -47,7 +47,8 @@ class Host
   def copy_codebase
     puts "Copying from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}"
     system("ssh #{$runner.login_as}@#{@hostname} 'mkdir -p #{$runner.remote_path}'")
-    if system("rsync --timeout=60 -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
+    excludes = $runner.rsync_exclude.map { |dir| "--exclude '#{dir}'"}
+    if system("rsync --delete-excluded #{excludes.join(" ")} --exclude=.git --timeout=60 -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
       puts "Finished copying to #{@hostname}"
       return true
     else
