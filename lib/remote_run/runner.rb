@@ -37,7 +37,8 @@ class Runner
   end
 
   def display_task_status
-    display_status("Waiting on #{@task_manager.count} tasks to start.  Trying #{@hosts.map(&:hostname).join(", ")}.")
+    trying = "Trying #{@hosts.map(&:hostname).join(", ")}." unless @hosts.empty?
+    display_status("Waiting on #{@task_manager.count} tasks to start. #{trying if trying}")
   end
 
   def display_pid_status
@@ -61,7 +62,7 @@ class Runner
       @hosts = @host_manager.hosts if @hosts.empty?
       display_task_status
 
-      if host = hosts.sample
+      if host = @hosts.sample
         @hosts.delete(host)
         if host.lock
           task = @task_manager.find_task
