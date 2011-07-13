@@ -41,7 +41,6 @@ class Runner
 
     while @task_manager.has_more_tasks?
       sleep(0.1)
-      display_info
       next unless host = @host_manager.free_host
 
       if host.lock
@@ -58,7 +57,6 @@ class Runner
     results = []
     while children.length > 0
       sleep(0.1)
-      display_info
       children.each do |child_pid|
         if Process.waitpid(child_pid, Process::WNOHANG)
           results << $?.exitstatus
@@ -75,16 +73,6 @@ class Runner
   end
 
   private
-
-  def display_info
-    if !@start_time || (@start_time - Time.now > 15)
-      puts "#{@task_manager.all.size} tasks left."
-      puts "#{@host_manager.unlocked_hosts.map(&:hostname).join(", ")} are free."
-      puts "#{@host_manager.locked_hosts.map(&:hostname).join(", ")} are locked."
-      puts "#{@host_manager.hosts_locked_by_me.map(&:hostname).join(", ")} are locked by me."
-      @start_time = Time.now
-    end
-  end
 
   class HostManager
     def initialize(&block)
