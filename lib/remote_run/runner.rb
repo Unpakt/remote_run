@@ -40,8 +40,7 @@ class Runner
     children = []
 
     while @task_manager.has_more_tasks?
-      sleep(0.1)
-      next unless host = @host_manager.free_host
+      sleep(0.1) and next unless host = @host_manager.free_host
 
       if host.lock
         task = @task_manager.find_task
@@ -55,14 +54,17 @@ class Runner
     end
 
     results = []
+    n = 0
     while children.length > 0
       sleep(0.1)
+      puts children.inspect if n % 100 == 0
       children.each do |child_pid|
         if Process.waitpid(child_pid, Process::WNOHANG)
           results << $?.exitstatus
           children.delete(child_pid)
         end
       end
+      n = n + 1
     end
 
     if results.all? { |result| result == 0 }
