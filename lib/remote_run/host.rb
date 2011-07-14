@@ -103,7 +103,7 @@ class Host
       end
 
       def read(file_path)
-        `ssh #{$runner.login_as}@#{@hostname} 'cat #{file_path}'`
+        `ssh #{$runner.login_as}@#{@hostname} 'cat #{file_path} 2>/dev/null'`
       end
 
       def write(file_path, text)
@@ -111,7 +111,7 @@ class Host
       end
 
       def delete(file_path)
-        `ssh #{$runner.login_as}@#{@hostname} 'rm #{file_path}'`
+        `ssh #{$runner.login_as}@#{@hostname} 'rm -f #{file_path}'`
       end
     end
   end
