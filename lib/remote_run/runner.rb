@@ -113,9 +113,7 @@ class Runner
 
     def add(hostname)
       host = Host.new(hostname)
-      if host.is_up?
-        @hosts << host
-      end
+      @hosts << host
     end
 
     def hosts
