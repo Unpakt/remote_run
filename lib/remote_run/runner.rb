@@ -66,11 +66,13 @@ class Runner
       if host = @hosts.sample
         @hosts.delete(host)
         if host.lock
+          puts "Locked #{host.hostname}."
           task = @task_manager.find_task
           @children << fork do
             this_host = host.dup
             status = this_host.run(task)
             host.unlock
+            puts "Unlocked #{host.hostname}."
             exit(status)
           end
         else
