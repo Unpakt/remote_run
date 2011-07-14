@@ -21,9 +21,9 @@ class Runner
     runner.run
   end
 
-  def self.log(message, color)
+  def self.log(message, color = :yellow)
     highline = HighLine.new
-    highline.say(highline.color(message, color || :yellow))
+    highline.say(highline.color(message, color))
   end
 
   def hosts
