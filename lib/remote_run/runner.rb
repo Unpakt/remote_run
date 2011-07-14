@@ -153,7 +153,7 @@ class Runner
     end
 
     def find_task
-      @tasks.pop
+      @tasks.shift
     end
 
     def all
