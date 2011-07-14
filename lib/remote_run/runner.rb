@@ -21,6 +21,11 @@ class Runner
     runner.run
   end
 
+  def self.log(message, color)
+    highline = HighLine.new
+    highline.say(highline.color(message, color || :yellow))
+  end
+
   def hosts
     @host_manager.all
   end
@@ -49,7 +54,7 @@ class Runner
   def display_status(message)
     now = Time.now.strftime("%S")[0]
     unless now == @last_timestamp
-      $highline.say($highline.color(message, :yellow))
+      Runner.log(message, :yellow)
       @last_timestamp = now
     end
   end
@@ -66,13 +71,13 @@ class Runner
       if host = @hosts.sample
         @hosts.delete(host)
         if host.lock
-          $highline.say($highline.color("Locked #{host.hostname}.", :green))
+          Runner.log("Locked #{host.hostname}.", :green)
           task = @task_manager.find_task
           @children << fork do
             this_host = host.dup
             status = this_host.run(task)
             host.unlock
-            $highline.say($highline.color("Unlocked #{host.hostname}.", :green))
+            Runner.log("Unlocked #{host.hostname}.", :green)
             exit(status)
           end
         else
@@ -96,9 +101,9 @@ class Runner
     end
 
     if results.all? { |result| result == 0 }
-      $highline.say($highline.color("Task passed.", :green))
+      Runner.log("Task passed.", :green)
     else
-      $highline.say($highline.color("Task failed.", :red))
+      Runner.log("Task failed.", :red)
     end
   end
 
