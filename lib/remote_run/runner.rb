@@ -49,7 +49,7 @@ class Runner
   def display_status(message)
     now = Time.now.strftime("%S")[0]
     unless now == @last_timestamp
-      puts message
+      $highline.say($highline.color(message, :yellow))
       @last_timestamp = now
     end
   end

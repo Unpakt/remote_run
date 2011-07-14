@@ -34,10 +34,10 @@ class Host
   def is_up?
     result = `ssh -o ConnectTimeout=3 #{$runner.login_as}@#{@hostname} "echo 'success'"`.strip
     if result == "success"
-      puts "#{@hostname} is up"
+      $highline.color("#{@hostname} is up", :green)
       return true
     else
-      puts "#{@hostname} is down: #{result}"
+      $highline.color("#{@hostname} is down: #{result}", :red)
       return false
     end
   end
@@ -49,16 +49,17 @@ class Host
     system("ssh #{$runner.login_as}@#{@hostname} 'mkdir -p #{$runner.remote_path}'")
     excludes = $runner.rsync_exclude.map { |dir| "--exclude '#{dir}'"}
     if system("rsync --delete-excluded #{excludes.join(" ")} --exclude=.git --timeout=60 -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
-      puts "Finished copying to #{@hostname}"
+      $highline.say($highline.color("Finished copying to #{@hostname}", :green))
       return true
     else
-      puts "rsync failed on #{@hostname}."
+      $highline.say($highline.color("rsync failed on #{@hostname}.", :red))
+      "Finished copying to #{@hostname}", :green)
       return false
     end
   end
 
   def run_task(task)
-    puts "Running '#{task}' on #{@hostname}"
+    $highline.say($highline.color("Running '#{task}' on #{@hostname}", :green))
     command = %Q{ssh #{$runner.login_as}@#{@hostname} 'cd #{$runner.remote_path}; #{task}' 2>&1}
     system(command)
     $?.exitstatus
