@@ -34,10 +34,10 @@ class Host
   def is_up?
     result = `ssh -o ConnectTimeout=3 #{$runner.login_as}@#{@hostname} "echo 'success'"`.strip
     if result == "success"
-      $highline.color("#{@hostname} is up", :green)
+      $highline.say($highline.color("#{@hostname} is up", :green))
       return true
     else
-      $highline.color("#{@hostname} is down: #{result}", :red)
+      $highline.say($highline.color("#{@hostname} is down: #{result}", :red))
       return false
     end
   end
@@ -45,7 +45,7 @@ class Host
   private
 
   def copy_codebase
-    puts "Copying from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}"
+    $highline.say($highline.color("Copying from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}", :yellow))
     system("ssh #{$runner.login_as}@#{@hostname} 'mkdir -p #{$runner.remote_path}'")
     excludes = $runner.rsync_exclude.map { |dir| "--exclude '#{dir}'"}
     if system("rsync --delete-excluded #{excludes.join(" ")} --exclude=.git --timeout=60 -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
@@ -53,7 +53,6 @@ class Host
       return true
     else
       $highline.say($highline.color("rsync failed on #{@hostname}.", :red))
-      "Finished copying to #{@hostname}", :green)
       return false
     end
   end

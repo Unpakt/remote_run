@@ -66,13 +66,13 @@ class Runner
       if host = @hosts.sample
         @hosts.delete(host)
         if host.lock
-          puts "Locked #{host.hostname}."
+          $highline.say($highline.color("Locked #{host.hostname}.", :green))
           task = @task_manager.find_task
           @children << fork do
             this_host = host.dup
             status = this_host.run(task)
             host.unlock
-            puts "Unlocked #{host.hostname}."
+            $highline.say($highline.color("Unlocked #{host.hostname}.", :green))
             exit(status)
           end
         else
@@ -96,9 +96,9 @@ class Runner
     end
 
     if results.all? { |result| result == 0 }
-      puts "Task passed."
+      $highline.say($highline.color("Task passed.", :green))
     else
-      puts "Task failed."
+      $highline.say($highline.color("Task failed.", :red))
     end
   end
 
