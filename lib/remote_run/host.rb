@@ -58,7 +58,7 @@ class Host
   end
 
   def run_task(task)
-    $highline.say($highline.color("Running '#{task}' on #{@hostname}", :green))
+    puts "Running '#{task}' on #{@hostname}"
     command = %Q{ssh #{$runner.login_as}@#{@hostname} 'cd #{$runner.remote_path}; #{task}' 2>&1}
     system(command)
     $?.exitstatus
