@@ -64,6 +64,8 @@ class Runner
     @children = []
     @hosts = []
 
+    Runner.log("Starting tasks... #{Time.now}")
+
     while @task_manager.has_more_tasks?
       @hosts = @host_manager.hosts.dup if @hosts.empty?
       display_task_status
@@ -85,6 +87,8 @@ class Runner
         end
       end
     end
+
+    Runner.log("All tasks started... #{Time.now}")
 
     results = []
     while @children.length > 0
