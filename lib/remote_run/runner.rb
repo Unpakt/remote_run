@@ -67,7 +67,7 @@ class Runner
             exit(status)
           end
         else
-          sleep(0.1)
+          sleep(0.5)
         end
       end
     end
