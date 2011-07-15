@@ -87,10 +87,11 @@ class Runner
       sleep(0.1)
     end
 
-    if results.all? { |result| result == 0 }
+    failed_tasks = results.select { |result| result != 0 }
+    if failed_tasks.length == 0
       Runner.log("Task passed.", :green)
     else
-      Runner.log("Task failed.", :red)
+      Runner.log("#{failed_tasks.length} task(s) failed.", :red)
     end
   end
 
