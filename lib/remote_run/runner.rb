@@ -1,5 +1,6 @@
 class Runner
-  attr_accessor :remote_path, :local_path, :local_hostname, :identifier, :login_as, :rsync_exclude
+  attr_accessor :remote_path, :local_path, :login_as, :rsync_exclude
+  attr_reader :local_hostname, :identifier
 
   def initialize
     @identifier = `echo $RANDOM`.strip
@@ -9,7 +10,6 @@ class Runner
     @local_path = Dir.getwd
     @login_as = `whoami`.strip
     @rsync_exclude = []
-    @timer = 0
     @remote_path = "/tmp/remote"
     @last_timestamp = Time.now.strftime("%S")[0]
     $runner = self
@@ -39,23 +39,6 @@ class Runner
   def tasks=(shell_commands)
     shell_commands.each do |shell_command|
       @task_manager.add(shell_command)
-    end
-  end
-
-  def display_task_status
-    trying = "Trying #{@hosts.map(&:hostname).join(", ")}." unless @hosts.empty?
-    display_status("\nWaiting on #{@task_manager.count} tasks to start. #{trying if trying}")
-  end
-
-  def display_pid_status
-    display_status("\nWaiting on #{@children.length} tasks to finish. #{@children.inspect}")
-  end
-
-  def display_status(message)
-    now = Time.now.strftime("%S")[0]
-    unless now == @last_timestamp
-      Runner.log(message, :yellow)
-      @last_timestamp = now
     end
   end
 
@@ -112,6 +95,24 @@ class Runner
   end
 
   private
+
+  def display_task_status
+    trying = "Trying #{@hosts.map(&:hostname).join(", ")}." unless @hosts.empty?
+    display_status("\nWaiting on #{@task_manager.count} tasks to start. #{trying if trying}")
+  end
+
+  def display_pid_status
+    display_status("\nWaiting on #{@children.length} tasks to finish. #{@children.inspect}")
+  end
+
+  def display_status(message)
+    now = Time.now.strftime("%S")[0]
+    unless now == @last_timestamp
+      Runner.log(message, :yellow)
+      @last_timestamp = now
+    end
+  end
+
 
   class HostManager
     def initialize(&block)
