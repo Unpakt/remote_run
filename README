@@ -1,32 +1,106 @@
-This is intended to be a simple remote shell script runner.
+Remote Run.
+----------------------------------------------------------------------
 
-what it does:
+Our development team wanted a way to distribute our test suite to many machines
+to reduce the total run time.  Remote Run is intended to be a simple way to 
+run a list of shell scripts on a pool of hosts until all have completed. 
 
-* rsyncs your current directory to a remote machine
-* runs a shell command of your choice
-* locks other machines from being able to use the same machine at the same time
+When two Remote Runs are in progress, the runners will compete to lock
+machines until all tasks are complete.
 
-What I want it to do:
+All remote ssh output appears on STDOUT.
 
-* say which task fails
-* say which hosts are in use and which are locked during the run
-* CLI for showing which machines are locked
-* CLI for showing which machines are locked by me
+Assumes: passwordless ssh to remote hosts
+
+NOTE:  Still under active development.
+
 
 Example: 
+----------------------------------------------------------------------
+require 'rubygems'
+require 'remote_run'
 
-setup = "source ~/.profile; rvm use ree-1.8.7-2010.02@casebook; bundle install;"
+hosts = ["broadway", "wall"]
+setup = "source ~/.profile; rvm use ree; bundle install;"
+tasks = [
+  "#{setup} bundle exec rspec spec/models",
+  "#{setup} bundle exec rspec spec/controllers"
+]
 
-Dir["features/**/*.feature"]
-
-Runner.run do |config|
-  config.remote_path = "~/workspace/remote/#{`hostname`.strip}"
-  config.local_path = Dir.getwd
-  config.hosts = ["elizabeth", "bedford"]
-  config.tasks = [
-    "#{setup} bundle exec spec spec/models/api/",
-    "#{setup} bundle exec spec spec/models/api/"
-  ]
+# configure runner
+runner = Runner.new do |config|
+  config.hosts = hosts
+  config.tasks = tasks
 end
 
+# kick off the run
+runner.run
+
+
+Configuration Options:
+----------------------------------------------------------------------
+Required:
+hosts - hostnames of remote machines.
+tasks - a string that is a shell script to be run on one of the hosts.
+
+Optional:
+remote_path - the location to rsync files to on the remote host.  (default: /tmp/remote)
+local_path - the local path to be rsync'd  (default: working directory)
+rsync_exclude - directories to exclude when rsyncing to remote host (default: [])
+login_as - the user used to log into ssh (default: current user)
+
+
+Accessible Attributes:
+----------------------------------------------------------------------
+local_hostname - your computer's hostname
+identifier - a unique identifier for your test run
+
+
+What it Does:
+----------------------------------------------------------------------
+
+* checks that all hosts can be logged into via ssh
+* runs each task on a remote host in parallel
+  * finds an unlocked remote host
+  * locks a remote host (puts a file on the remote host)
+  * finds a task to run
+  * forks a separate process and gives it the selected task
+    * rsyncs your current directory to the locked remote host
+    * via ssh, runs a shell command of your choice on the locked remote host
+    * unlocks the machine (removes the file from the remote host)
+    * returns the status code of the shell script
+  * finds the next machine to be locked
+  * waits for all forks to return
+  * displays success message if all status codes from the forks are zero (0)
+  * displays failure message if any status codes from the forks are non-zero
+
+
+
+Dependencies:
+----------------------------------------------------------------------
+* HighLine 
+
+
+License:
+----------------------------------------------------------------------
+
+Copyright (C) 2011 by Adam Berlin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 
