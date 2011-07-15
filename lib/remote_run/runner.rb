@@ -66,10 +66,10 @@ class Runner
             Runner.log("Unlocked #{host.hostname}.", :yellow)
             exit(status)
           end
-        else
-          sleep(0.1)
         end
       end
+
+      sleep(0.5)
     end
 
     Runner.log("All tasks started... #{Time.now}")
