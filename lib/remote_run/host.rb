@@ -107,7 +107,7 @@ class Host
       end
 
       def write(file_path, text)
-        `ssh #{$runner.login_as}@#{@hostname} 'echo #{text} > #{file_path}'`
+        `ssh #{$runner.login_as}@#{@hostname} 'test -e #{file_path} || echo #{text} > #{file_path}'`
       end
 
       def delete(file_path)
