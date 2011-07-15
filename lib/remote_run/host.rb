@@ -8,10 +8,10 @@ class Host
   end
 
   def lock
-    return false if locked?
-
-    @lock.get
-    locked_by_me?
+    unless locked?
+      @lock.get
+      locked_by_me?
+    end
   end
 
   def unlock
@@ -90,9 +90,7 @@ class Host
     end
 
     def get
-      unless locked?
-        @remote_file.write(@file, @locker)
-      end
+      @remote_file.write(@file, @locker)
     end
 
     class RemoteFile
@@ -109,7 +107,7 @@ class Host
       end
 
       def write(file_path, text)
-        `ssh #{$runner.login_as}@#{@hostname} 'test -e #{file_path} || (echo #{text} > #{file_path})'`
+        `ssh #{$runner.login_as}@#{@hostname} 'test -e #{file_path} || echo #{text} > #{file_path}'`
       end
 
       def delete(file_path)
