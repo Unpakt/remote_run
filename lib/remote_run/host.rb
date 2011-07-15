@@ -8,6 +8,8 @@ class Host
   end
 
   def lock
+    return false if locked?
+
     @lock.get
     locked_by_me?
   end
