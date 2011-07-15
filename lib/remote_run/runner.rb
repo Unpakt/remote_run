@@ -62,6 +62,7 @@ class Runner
             this_host = host.dup
             status = this_host.run(task)
             host.unlock
+            Runner.log("#{host.hostname} failed.", :red) if status != 0
             Runner.log("Unlocked #{host.hostname}.", :yellow)
             exit(status)
           end
