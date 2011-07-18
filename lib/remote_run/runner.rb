@@ -23,10 +23,8 @@ class Runner
   end
 
   def self.log(message, color = :yellow)
-    if @logging
-      highline = HighLine.new
-      highline.say(highline.color(message, color))
-    end
+    highline = HighLine.new
+    highline.say(highline.color(message, color))
   end
 
   def hosts
