@@ -1,23 +1,21 @@
 class Host
   FAIL = 1
   attr_reader :hostname
+  attr_reader :lock_file
 
   def initialize(hostname)
     @hostname = hostname
-    @lock = Lock.new(@hostname, $runner.local_hostname, $runner.identifier)
+    @lock_file = LockFile.new(@hostname, $runner.local_hostname, $runner.identifier)
   end
 
   def lock
     unless locked?
-      @lock.get
-      locked_by_me?
+      @lock_file.get && locked_by_me?
     end
   end
 
   def unlock
-    if locked_by_me?
-      @lock.release
-    end
+    @lock_file.release
   end
 
   def run(task)
@@ -25,16 +23,8 @@ class Host
     run_task(task)
   end
 
-  def locked?
-    @lock.locked?
-  end
-
-  def locked_by_me?
-    @lock.locked_by_me?
-  end
-
   def is_up?
-    result = `ssh -o ConnectTimeout=3 #{$runner.login_as}@#{@hostname} "echo 'success'"`.strip
+    result = `ssh -o ConnectTimeout=3 #{$runner.login_as}@#{@hostname} "echo 'success'" 2>/dev/null`.strip
     if result == "success"
       Runner.log("#{@hostname} is up", :green)
       return true
@@ -45,6 +35,14 @@ class Host
   end
 
   private
+
+  def locked?
+    @lock_file.locked?
+  end
+
+  def locked_by_me?
+    @lock_file.locked_by_me?
+  end
 
   def copy_codebase
     Runner.log("Copying from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}", :yellow)
@@ -60,37 +58,37 @@ class Host
   end
 
   def run_task(task)
-    puts "Running '#{task}' on #{@hostname}"
+    Runner.log("Running '#{task}' on #{@hostname}", :white)
     command = %Q{ssh #{$runner.login_as}@#{@hostname} 'cd #{$runner.remote_path}; #{task}' 2>&1}
     system(command)
     $?.exitstatus
   end
 
-  class Lock
+  class LockFile
     FILE = "/tmp/remote-run-lock"
 
     def initialize(remote_hostname, local_hostname, unique_run_marker)
-      @file = FILE
+      @filename = FILE
       @locker = "#{local_hostname}-#{unique_run_marker}"
       @remote_file = RemoteFile.new(remote_hostname)
     end
 
     def release
       if locked_by_me?
-        @remote_file.delete(@file)
+        @remote_file.delete(@filename)
       end
     end
 
     def locked?
-      @remote_file.exist?(@file)
+      @remote_file.exist?(@filename)
     end
 
     def locked_by_me?
-      @remote_file.exist?(@file) && @remote_file.read(@file).strip == @locker
+      @remote_file.exist?(@filename) && @remote_file.read(@filename).strip == @locker
     end
 
     def get
-      @remote_file.write(@file, @locker)
+      @remote_file.write(@filename, @locker)
     end
 
     class RemoteFile
@@ -99,19 +97,27 @@ class Host
       end
 
       def exist?(file_path)
-        `ssh #{$runner.login_as}@#{@hostname} 'test -f #{file_path}; echo $?'`.strip == "0"
+        run_and_test("test -f #{file_path}")
       end
 
       def read(file_path)
-        `ssh #{$runner.login_as}@#{@hostname} 'cat #{file_path} 2>/dev/null'`
+        run("cat #{file_path}")
       end
 
       def write(file_path, text)
-        `ssh #{$runner.login_as}@#{@hostname} 'test -e #{file_path} || echo #{text} > #{file_path}'`
+        run_and_test("test -e #{file_path} || echo #{text} > #{file_path}")
       end
 
       def delete(file_path)
-        `ssh #{$runner.login_as}@#{@hostname} 'rm -f #{file_path}'`
+        run_and_test("rm -f #{file_path}")
+      end
+
+      def run(command)
+        `ssh #{$runner.login_as}@#{@hostname} '#{command};'`.strip
+      end
+
+      def run_and_test(command)
+        `ssh #{$runner.login_as}@#{@hostname} '#{command}; echo $?'`.strip == "0"
       end
     end
   end

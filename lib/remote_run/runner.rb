@@ -1,5 +1,5 @@
 class Runner
-  attr_accessor :remote_path, :local_path, :login_as, :rsync_exclude
+  attr_accessor :remote_path, :local_path, :login_as, :rsync_exclude, :logging
   attr_reader :local_hostname, :identifier
 
   def initialize
@@ -12,6 +12,7 @@ class Runner
     @rsync_exclude = []
     @remote_path = "/tmp/remote"
     @last_timestamp = Time.now.strftime("%S")[0]
+    @logging ||= true
     $runner = self
     yield self
   end
@@ -22,8 +23,10 @@ class Runner
   end
 
   def self.log(message, color = :yellow)
-    highline = HighLine.new
-    highline.say(highline.color(message, color))
+    if @logging
+      highline = HighLine.new
+      highline.say(highline.color(message, color))
+    end
   end
 
   def hosts
