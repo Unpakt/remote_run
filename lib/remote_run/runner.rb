@@ -52,6 +52,11 @@ class Runner
 
     Runner.log("Starting tasks... #{Time.now}")
 
+    while @host_manager.hosts.empty?
+      Runner.log("Waiting for hosts...")
+      sleep(1)
+    end
+
     while @task_manager.has_more_tasks?
       @hosts = @host_manager.hosts.dup if @hosts.empty?
       display_task_status
