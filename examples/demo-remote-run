@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'bundler/setup'
+require 'remote_run'
+
+Runner.log("Scanning 10.64.20.* for hosts...", :yellow)
+hosts = `nmap -p 22 10.64.20.1/24 --open -sV | grep -B3 "Debian" | grep 10.64.20 | cut -f 5 -d " "`.lines.map(&:strip)
+
+Runner.log("With all tasks passing...")
+tasks = []
+50.times do |n|
+  tasks << "hostname; date; echo $?"
+end
+
+Runner.run do |config|
+  config.tasks = tasks
+  config.login_as = "pivotalcb"
+  config.hosts = hosts
+end

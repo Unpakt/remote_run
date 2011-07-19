@@ -33,7 +33,9 @@ class Runner
 
   def hosts=(hostnames)
     hostnames.each do |hostname|
-      @host_manager.add(hostname)
+      Thread.new do
+        @host_manager.add(hostname)
+      end
     end
   end
 
@@ -115,7 +117,6 @@ class Runner
       @last_timestamp = now
     end
   end
-
 
   class HostManager
     def initialize(&block)
