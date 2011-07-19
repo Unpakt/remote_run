@@ -24,7 +24,7 @@ class Host
   end
 
   def is_up?
-    result = `ssh -o ConnectTimeout=3 #{$runner.login_as}@#{@hostname} "echo 'success'" 2>/dev/null`.strip
+    result = `ssh -4 -o ConnectTimeout=2 #{$runner.login_as}@#{@hostname} "echo 'success'" 2>/dev/null`.strip
     if result == "success"
       Runner.log("#{@hostname} is up", :green)
       return true
