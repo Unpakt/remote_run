@@ -105,6 +105,7 @@ class Runner
     unless now == @last_timestamp
       display_status("Waiting on #{@task_manager.count} of #{@starting_number_of_tasks} tasks to start.") if @task_manager.count > 0
       display_status("Waiting on #{@children.length} of #{@starting_number_of_tasks - @task_manager.count} started tasks to finish.") if @children.length > 0
+      $stdout.flush
       @last_timestamp = now
     end
   end
