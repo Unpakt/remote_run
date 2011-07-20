@@ -71,7 +71,6 @@ class Runner
           end
         end
       end
-      sleep(0.1)
     end
 
     Runner.log("All tasks started... #{Time.now}")
