@@ -3,31 +3,42 @@ class Runner
   attr_reader :local_hostname, :identifier
 
   def initialize
-    @identifier = `echo $RANDOM`.strip
-    @local_hostname = `hostname`.strip
     @task_manager = TaskManager.new
     @host_manager = HostManager.new
+
+    # config options
+    @identifier = `echo $RANDOM`.strip
+    @local_hostname = `hostname`.strip
     @local_path = Dir.getwd
     @login_as = `whoami`.strip
+    @remote_path = "/tmp/remote"
     @rsync_exclude = []
+
+    # used in the runner
     @results = []
     @children = []
     @failed = []
-    @remote_path = "/tmp/remote"
     @last_timestamp = Time.now.strftime("%S")[0]
-    @logging ||= true
+
     $runner = self
     yield self
   end
 
   def self.run(&block)
+    @@start_time = Time.now
     runner = new(&block)
     runner.run
   end
 
+  def run_time
+    minutes = ((Time.now - @@start_time) / 60).to_i
+    seconds = ((Time.now - @@start_time) % 60).to_i
+    "#{minutes}:#{"%02d" % seconds}"
+  end
+
   def self.log(message, color = :yellow)
     highline = HighLine.new
-    highline.say(highline.color("[Remote #{Time.now.strftime('%I:%M:%S')}] #{message}", color))
+    highline.say(highline.color("[Remote #{run_time}] #{message}", color))
   end
 
   def hosts
@@ -87,6 +98,8 @@ class Runner
     else
       Runner.log("#{failed_tasks.length} task(s) failed.", :red)
     end
+
+    Runner.log("Total Time: #{self.class.run_time} minutes.")
   end
 
   def check_for_finished
