@@ -1,6 +1,7 @@
 class Runner
   attr_accessor :remote_path, :local_path, :login_as, :rsync_exclude, :logging
   attr_reader :local_hostname, :identifier
+  @@start_time = nil
 
   def initialize
     @task_manager = TaskManager.new
