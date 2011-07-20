@@ -4,16 +4,19 @@ require 'bundler/setup'
 require 'remote_run'
 
 Runner.log("Scanning 10.64.20.* for hosts...", :yellow)
-hosts = `nmap -p 22 10.64.20.1/24 --open -sV | grep -B3 "Debian" | grep 10.64.20 | cut -f 5 -d " "`.lines.map(&:strip)
-
+#hosts = `nmap -p 22 10.64.20.1/24 --open -sV | grep -B3 "Debian" | grep 10.64.20 | cut -f 5 -d " "`.lines.map(&:strip)
+hosts = %w{ 10.64.20.1 10.64.20.12 10.64.20.15 10.64.20.18 10.64.20.21 10.64.20.26 10.64.20.30 10.64.20.38 10.64.20.43 10.64.20.47 10.64.20.49 10.64.20.50 10.64.20.51 10.64.20.53 10.64.20.56 10.64.20.58 10.64.20.59 10.64.20.61 10.64.20.62 10.64.20.64 10.64.20.66 10.64.20.69 10.64.20.74 10.64.20.76 10.64.20.79 10.64.20.80 10.64.20.93 10.64.20.101 10.64.20.110 10.64.20.111 10.64.20.122 10.64.20.149 10.64.20.164 10.64.20.168 10.64.20.198 10.64.20.209 10.64.20.214 10.64.20.221 10.64.20.244 10.64.20.245 10.64.20.246 10.64.20.247 10.64.20.248 10.64.20.249 10.64.20.250 10.64.20.251 10.64.20.252 10.64.20.253 10.64.20.254 } 
 Runner.log("With all tasks passing...")
 tasks = []
 50.times do |n|
-  tasks << "hostname; date; echo $?"
+  tasks << "sleep 2; date;"
 end
+tasks << "cat /foo/bar"
 
 Runner.run do |config|
   config.tasks = tasks
   config.login_as = "pivotalcb"
   config.hosts = hosts
 end
+
+Runner.log("Expected one failure to test that it still works...")
