@@ -76,6 +76,7 @@ class Runner
     Runner.log("All tasks started... #{Time.now}")
 
     while @children.length > 0
+      display_log
       check_for_finished
     end
 
@@ -88,8 +89,6 @@ class Runner
   end
 
   def check_for_finished
-    display_log
-
     @children.each do |child_pid|
       if Process.waitpid(child_pid, Process::WNOHANG)
         @results << $?.exitstatus
