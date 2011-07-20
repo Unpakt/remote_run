@@ -10,6 +10,8 @@ class Runner
     @local_path = Dir.getwd
     @login_as = `whoami`.strip
     @rsync_exclude = []
+    @results = []
+    @children = []
     @remote_path = "/tmp/remote"
     @last_timestamp = Time.now.strftime("%S")[0]
     @logging ||= true
@@ -24,7 +26,7 @@ class Runner
 
   def self.log(message, color = :yellow)
     highline = HighLine.new
-    highline.say(highline.color(message, color))
+    highline.say(highline.color("[Remote #{Time.now.strftime('%I:%M:%S')}] #{message}", color))
   end
 
   def hosts
@@ -33,9 +35,7 @@ class Runner
 
   def hosts=(hostnames)
     hostnames.each do |hostname|
-      Thread.new do
-        @host_manager.add(hostname)
-      end
+      @host_manager.add(hostname)
     end
   end
 
@@ -47,51 +47,39 @@ class Runner
 
   def run
     @host_manager.unlock_on_exit
-    @children = []
-    @hosts = []
+    hosts = []
 
     Runner.log("Starting tasks... #{Time.now}")
 
+    @starting_number_of_tasks = @task_manager.count
     while @task_manager.has_more_tasks?
-      @hosts = @host_manager.hosts.dup if @hosts.empty?
-      display_task_status
+      hosts = @host_manager.hosts.dup if hosts.empty?
 
-      if host = @hosts.sample
-        @hosts.delete(host)
+      display_log
+      check_for_finished
+
+      if host = hosts.sample
+        hosts.delete(host)
         if host.lock
-          Runner.log("Locked #{host.hostname}.", :yellow)
           task = @task_manager.find_task
           @children << fork do
             this_host = host.dup
             status = this_host.run(task)
             host.unlock
             Runner.log("#{host.hostname} failed.", :red) if status != 0
-            Runner.log("Unlocked #{host.hostname}.", :yellow)
-            exit(status)
+            Process.exit!(status)
           end
         end
       end
-
-      sleep(0.5)
     end
 
     Runner.log("All tasks started... #{Time.now}")
 
-    results = []
     while @children.length > 0
-      display_pid_status
-
-      @children.each do |child_pid|
-        if Process.waitpid(child_pid, Process::WNOHANG)
-          results << $?.exitstatus
-          @children.delete(child_pid)
-        end
-      end
-
-      sleep(0.1)
+      check_for_finished
     end
 
-    failed_tasks = results.select { |result| result != 0 }
+    failed_tasks = @results.select { |result| result != 0 }
     if failed_tasks.length == 0
       Runner.log("Task passed.", :green)
     else
@@ -99,23 +87,31 @@ class Runner
     end
   end
 
-  private
+  def check_for_finished
+    display_log
 
-  def display_task_status
-    trying = "Trying #{@hosts.map(&:hostname).join(", ")}." unless @hosts.empty?
-    display_status("\nWaiting on #{@task_manager.count} tasks to start. #{trying if trying}")
+    @children.each do |child_pid|
+      if Process.waitpid(child_pid, Process::WNOHANG)
+        @results << $?.exitstatus
+        @children.delete(child_pid)
+      end
+    end
+    sleep(0.5)
   end
 
-  def display_pid_status
-    display_status("\nWaiting on #{@children.length} tasks to finish. #{@children.inspect}")
+  private
+
+  def display_log
+    now = Time.now.strftime("%S")[0]
+    unless now == @last_timestamp
+      display_status("Waiting on #{@task_manager.count} of #{@starting_number_of_tasks} tasks to start.") if @task_manager.count > 0
+      display_status("Waiting on #{@children.length} of #{@starting_number_of_tasks - @task_manager.count} started tasks to finish.") if @children.length > 0
+      @last_timestamp = now
+    end
   end
 
   def display_status(message)
-    now = Time.now.strftime("%S")[0]
-    unless now == @last_timestamp
-      Runner.log(message, :yellow)
-      @last_timestamp = now
-    end
+    Runner.log(message, :yellow)
   end
 
   class HostManager
@@ -129,15 +125,17 @@ class Runner
 
     def add(hostname)
       host = Host.new(hostname)
-      if host.is_up?
-        @hosts << host
+      Thread.new do
+        if host.is_up?
+          @hosts << host
+        end
       end
     end
 
     def hosts
       while @hosts.empty?
         Runner.log("Waiting for hosts...")
-        sleep(1)
+        sleep(0.5)
       end
 
       @hosts
