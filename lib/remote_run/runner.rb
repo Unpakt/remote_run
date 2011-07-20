@@ -12,6 +12,7 @@ class Runner
     @rsync_exclude = []
     @results = []
     @children = []
+    @failed = []
     @remote_path = "/tmp/remote"
     @last_timestamp = Time.now.strftime("%S")[0]
     @logging ||= true
@@ -91,6 +92,10 @@ class Runner
   def check_for_finished
     @children.each do |child_pid|
       if Process.waitpid(child_pid, Process::WNOHANG)
+        if $?.exitstatus != 0
+          @failed << child_pid
+        end
+
         @results << $?.exitstatus
         @children.delete(child_pid)
       end
@@ -104,7 +109,7 @@ class Runner
     now = Time.now.strftime("%S")[0]
     unless now == @last_timestamp
       display_status("Waiting on #{@task_manager.count} of #{@starting_number_of_tasks} tasks to start.") if @task_manager.count > 0
-      display_status("Waiting on #{@children.length} of #{@starting_number_of_tasks - @task_manager.count} started tasks to finish.") if @children.length > 0
+      display_status("Waiting on #{@children.length} of #{@starting_number_of_tasks - @task_manager.count} started tasks to finish. #{@failed.size} failed.") if @children.length > 0
       $stdout.print("\n")
       $stdout.flush
       @last_timestamp = now
