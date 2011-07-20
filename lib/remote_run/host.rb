@@ -101,7 +101,7 @@ class Host
       end
 
       def read(file_path)
-        run("cat #{file_path}")
+        run("test -e #{file_path} && cat #{file_path}")
       end
 
       def write(file_path, text)
