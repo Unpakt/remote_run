@@ -30,7 +30,7 @@ class Runner
     runner.run
   end
 
-  def run_time
+  def self.run_time
     minutes = ((Time.now - @@start_time) / 60).to_i
     seconds = ((Time.now - @@start_time) % 60).to_i
     "#{minutes}:#{"%02d" % seconds}"
