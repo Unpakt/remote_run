@@ -43,6 +43,10 @@ class Host
     system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'while true; do sleep 1; done' &")
   end
 
+  def stop_ssh_master_connection
+    system("pkill -P #{Process.pid}")
+  end
+
   def ssh_host_and_user
     "#{$runner.login_as}@#{@hostname}"
   end
