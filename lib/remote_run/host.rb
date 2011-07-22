@@ -63,7 +63,7 @@ class Host
     Runner.log("Copying from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}", :yellow)
     system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'mkdir -p #{$runner.remote_path}'")
     excludes = $runner.rsync_exclude.map { |dir| "--exclude '#{dir}'"}
-    if system(%{rsync --rsh="ssh #{SSH_CONFIG} #{ssh_host_and_user}" --delete-excluded #{excludes.join(" ")} --exclude=.git --timeout=60 -a #{$runner.local_path}/ #{ssh_host_and_user}:#{$runner.remote_path}/})
+    if system(%{rsync --rsh='ssh #{SSH_CONFIG}' --delete-excluded #{excludes.join(" ")} --exclude=.git --timeout=60 -a #{$runner.local_path}/ #{ssh_host_and_user}:#{$runner.remote_path}/})
       Runner.log("Finished copying to #{@hostname}", :green)
       return true
     else
