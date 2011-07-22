@@ -1,5 +1,6 @@
 class Host
   FAIL = 1
+  PASS = 0
   SSH_CONFIG = " -o ControlMaster=auto -o ControlPath=~/.ssh/master-%l-%r@%h:%p -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -4 "
   attr_reader :hostname
   attr_reader :lock_file

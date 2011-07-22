@@ -94,13 +94,16 @@ class Runner
     end
 
     failed_tasks = @results.select { |result| result != 0 }
-    if failed_tasks.length == 0
+    status_code = if failed_tasks.length == 0
       Runner.log("Task passed.", :green)
+      Host::PASS
     else
       Runner.log("#{failed_tasks.length} task(s) failed.", :red)
+      Host::FAIL
     end
 
     Runner.log("Total Time: #{self.class.run_time} minutes.")
+    exit(status_code)
   end
 
   def check_for_finished
