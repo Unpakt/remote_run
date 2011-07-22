@@ -26,7 +26,7 @@ class Host
   end
 
   def is_up?
-    result = `ssh #{SSH_CONFIG} -o ConnectTimeout=2 #{$runner.login_as}@#{@hostname} "echo 'success'" 2>/dev/null`.strip
+    result = `ssh #{SSH_CONFIG} -o ConnectTimeout=2 #{ssh_host_and_user} "echo 'success'" 2>/dev/null`.strip
     if result == "success"
       start_ssh_master_connection
       Runner.log("#{@hostname} is up", :green)
@@ -40,7 +40,11 @@ class Host
   private
 
   def start_ssh_master_connection
-    system("ssh #{SSH_CONFIG} #{$runner.login_as}@#{@hostname} 'while true; do sleep 1; done' &")
+    system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'while true; do sleep 1; done' &")
+  end
+
+  def ssh_host_and_user
+    "#{$runner.login_as}@#{@hostname}"
   end
 
   def locked?
@@ -53,9 +57,9 @@ class Host
 
   def copy_codebase
     Runner.log("Copying from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}", :yellow)
-    system("ssh #{SSH_CONFIG} #{$runner.login_as}@#{@hostname} 'mkdir -p #{$runner.remote_path}'")
+    system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'mkdir -p #{$runner.remote_path}'")
     excludes = $runner.rsync_exclude.map { |dir| "--exclude '#{dir}'"}
-    if system("rsync --delete-excluded #{excludes.join(" ")} --exclude=.git --timeout=60 -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
+    if system(%{rsync --rsh="ssh #{SSH_CONFIG} #{ssh_host_and_user}" --delete-excluded #{excludes.join(" ")} --exclude=.git --timeout=60 -a #{$runner.local_path}/ #{ssh_host_and_user}:#{$runner.remote_path}/})
       Runner.log("Finished copying to #{@hostname}", :green)
       return true
     else
@@ -66,7 +70,7 @@ class Host
 
   def run_task(task)
     Runner.log("Running '#{task}' on #{@hostname}", :white)
-    command = %Q{ssh #{SSH_CONFIG} #{$runner.login_as}@#{@hostname} 'cd #{$runner.remote_path}; #{task}' 2>&1}
+    command = %Q{ssh #{SSH_CONFIG} #{ssh_host_and_user} 'cd #{$runner.remote_path}; #{task}' 2>&1}
     system(command)
     $?.exitstatus
   end
