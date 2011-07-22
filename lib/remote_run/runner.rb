@@ -168,8 +168,8 @@ class Runner
       at_exit do
         duped_hosts = all.map { |host| host.dup }
         duped_hosts.each do |host|
-          host.stop_ssh_master_connection
           host.unlock
+          host.stop_ssh_master_connection
         end
       end
     end
