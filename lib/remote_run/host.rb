@@ -1,5 +1,6 @@
 class Host
   FAIL = 1
+  SSH_CONFIG = " -o ControlMaster=yes -o ControlPath=~/.ssh/master-%1-%r@%h:%p -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -4 "
   attr_reader :hostname
   attr_reader :lock_file
 
@@ -24,8 +25,9 @@ class Host
   end
 
   def is_up?
-    result = `ssh -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -4 -o ConnectTimeout=2 #{$runner.login_as}@#{@hostname} "echo 'success'" 2>/dev/null`.strip
+    result = `ssh #{SSH_CONFIG} -o ConnectTimeout=2 #{$runner.login_as}@#{@hostname} "echo 'success'" 2>/dev/null`.strip
     if result == "success"
+      start_ssh_master_connection
       Runner.log("#{@hostname} is up", :green)
       return true
     else
@@ -35,6 +37,10 @@ class Host
   end
 
   private
+
+  def start_ssh_master_connection
+    system("ssh #{SSH_CONFIG} 'while true; do sleep 1; done' &")
+  end
 
   def locked?
     @lock_file.locked?
@@ -46,7 +52,7 @@ class Host
 
   def copy_codebase
     Runner.log("Copying from #{$runner.local_path} to #{@hostname}:#{$runner.remote_path}", :yellow)
-    system("ssh #{$runner.login_as}@#{@hostname} 'mkdir -p #{$runner.remote_path}'")
+    system("ssh #{SSH_CONFIG} #{$runner.login_as}@#{@hostname} 'mkdir -p #{$runner.remote_path}'")
     excludes = $runner.rsync_exclude.map { |dir| "--exclude '#{dir}'"}
     if system("rsync --delete-excluded #{excludes.join(" ")} --exclude=.git --timeout=60 -a #{$runner.local_path}/ #{$runner.login_as}@#{@hostname}:#{$runner.remote_path}/")
       Runner.log("Finished copying to #{@hostname}", :green)
@@ -59,7 +65,7 @@ class Host
 
   def run_task(task)
     Runner.log("Running '#{task}' on #{@hostname}", :white)
-    command = %Q{ssh #{$runner.login_as}@#{@hostname} 'cd #{$runner.remote_path}; #{task}' 2>&1}
+    command = %Q{ssh #{SSH_CONFIG} #{$runner.login_as}@#{@hostname} 'cd #{$runner.remote_path}; #{task}' 2>&1}
     system(command)
     $?.exitstatus
   end
@@ -113,11 +119,11 @@ class Host
       end
 
       def run(command)
-        `ssh #{$runner.login_as}@#{@hostname} '#{command};'`.strip
+        `ssh #{Host::SSH_CONFIG} #{$runner.login_as}@#{@hostname} '#{command};'`.strip
       end
 
       def run_and_test(command)
-        `ssh #{$runner.login_as}@#{@hostname} '#{command}; echo $?'`.strip == "0"
+        `ssh #{Host::SSH_CONFIG} #{$runner.login_as}@#{@hostname} '#{command}; echo $?'`.strip == "0"
       end
     end
   end
