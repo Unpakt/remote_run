@@ -103,7 +103,7 @@ class Runner
     end
 
     Runner.log("Total Time: #{self.class.run_time} minutes.")
-    exit(status_code)
+    status_code
   end
 
   def check_for_finished
