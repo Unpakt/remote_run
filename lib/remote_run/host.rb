@@ -38,7 +38,7 @@ class Host
   end
 
   def stop_ssh_master_connection
-    system("pkill -P #{Process.pid}")
+    system("pkill -P #{Process.pid} 2>&1 > /dev/null")
   end
 
   private
