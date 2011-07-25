@@ -1,5 +1,5 @@
 class Runner
-  attr_accessor :remote_path, :local_path, :login_as, :rsync_exclude, :logging
+  attr_accessor :remote_path, :local_path, :login_as, :rsync_exclude, :logging, :temp_path
   attr_reader :local_hostname, :identifier
   @@start_time = Time.now
 
@@ -14,6 +14,7 @@ class Runner
     @login_as = `whoami`.strip
     @remote_path = "/tmp/remote"
     @rsync_exclude = []
+    @temp_path = "/tmp/remote"
 
     # used in the runner
     @results = []
@@ -60,6 +61,7 @@ class Runner
 
   def run
     @host_manager.unlock_on_exit
+    sync_working_copy_to_temp_location
     hosts = []
 
     Runner.log("Starting tasks... #{Time.now}")
@@ -121,6 +123,12 @@ class Runner
   end
 
   private
+
+  def sync_working_copy_to_temp_location
+    Runner.log("Creating temporary copy of #{@local_path} in #{@temp_path}...")
+    system("rsync -a #{@local_path}/ #{@temp_path}/")
+    Runner.log("Done.")
+  end
 
   def display_log
     now = Time.now.strftime("%S")[0]
