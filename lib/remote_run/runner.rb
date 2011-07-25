@@ -125,9 +125,9 @@ class Runner
   private
 
   def sync_working_copy_to_temp_location
-    Remote.log("Creating temporary copy of #{@local_path} in #{@temp_path}...")
+    Runner.log("Creating temporary copy of #{@local_path} in #{@temp_path}...")
     system("rsync -a #{@local_path}/ #{@temp_path}/")
-    Remote.log("Done.")
+    Runner.log("Done.")
   end
 
   def display_log
