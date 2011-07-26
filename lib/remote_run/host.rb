@@ -37,10 +37,15 @@ class Host
     end
   end
 
+  def kill_ssh_master_connection
+    Process.kill("HUP", @master_connection_pid)
+  end
+
   private
 
   def start_ssh_master_connection
-    fork do
+    @master_connection_pid = fork do
+      Signal.trap("HUP") { exit }
       system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'while true; do sleep 1; done'")
     end
   end

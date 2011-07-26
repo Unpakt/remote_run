@@ -174,12 +174,17 @@ class Runner
 
     def unlock_on_exit
       at_exit do
-        duped_hosts = all.map { |host| host.dup }
-        duped_hosts.each do |host|
+        all.each do |host|
           begin
             host.unlock
           rescue Exception
           end
+        end
+      end
+
+      at_exit do
+        all.each do |host|
+          host.kill_ssh_master_connection
         end
       end
     end
