@@ -1,7 +1,7 @@
 class Host
   FAIL = 1
   PASS = 0
-  SSH_CONFIG = " -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -4 "
+  SSH_CONFIG = " -o ControlMaster=auto -o ControlPath=~/.ssh/master-%l-%r@%h:%p -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -4 "
   attr_reader :hostname
   attr_reader :lock_file
 
@@ -35,10 +35,6 @@ class Host
       Runner.log("#{@hostname} is down: #{result}", :red)
       return false
     end
-  end
-
-  def stop_ssh_master_connection
-    system("pkill -P #{Process.pid} 2>&1 > /dev/null")
   end
 
   private
