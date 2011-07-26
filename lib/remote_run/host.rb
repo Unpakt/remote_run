@@ -128,7 +128,7 @@ class Host
       end
 
       def run_and_test(command)
-        `ssh #{Host::SSH_CONFIG} #{$runner.login_as}@#{@hostname} '#{command}; echo $?'`.strip == "0"
+        system("ssh #{Host::SSH_CONFIG} #{$runner.login_as}@#{@hostname} '#{command}'")
       end
     end
   end
