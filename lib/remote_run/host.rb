@@ -28,7 +28,6 @@ class Host
   def is_up?
     result = `ssh #{SSH_CONFIG} -o ConnectTimeout=2 #{ssh_host_and_user} "echo 'success'" 2>/dev/null`.strip
     if result == "success"
-      start_ssh_master_connection
       Runner.log("#{@hostname} is up", :green)
       return true
     else
@@ -37,18 +36,7 @@ class Host
     end
   end
 
-  def kill_ssh_master_connection
-    Process.kill("HUP", @master_connection_pid)
-  end
-
   private
-
-  def start_ssh_master_connection
-    @master_connection_pid = fork do
-      Signal.trap("HUP") { exit }
-      system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'while true; do sleep 1; done'")
-    end
-  end
 
   def ssh_host_and_user
     "#{$runner.login_as}@#{@hostname}"

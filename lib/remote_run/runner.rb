@@ -78,11 +78,16 @@ class Runner
         if host.lock
           task = @task_manager.find_task
           @children << fork do
-            this_host = host.dup
-            status = this_host.run(task)
-            host.unlock
-            Runner.log("#{host.hostname} failed.", :red) if status != 0
-            Process.exit!(status)
+            begin
+              this_host = host.dup
+              status = this_host.run(task)
+              host.unlock
+              Runner.log("#{host.hostname} failed.", :red) if status != 0
+            rescue Errno::EPIPE
+              Runner.log("broken pipe on #{host.hostname}...")
+            ensure
+              Process.exit!(status)
+            end
           end
         end
       end
@@ -180,19 +185,6 @@ class Runner
           rescue Exception
           end
         end
-      end
-
-      at_exit do
-        all.each do |host|
-          host.kill_ssh_master_connection
-        end
-      end
-    end
-
-    def clean_up_ssh_connections
-      begin
-        system("ps aux | grep ControlMaster | awk '{ print $2;}' | xargs kill")
-      rescue Exception
       end
     end
   end
