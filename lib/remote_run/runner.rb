@@ -177,7 +177,6 @@ class Runner
         duped_hosts = all.map { |host| host.dup }
         duped_hosts.each do |host|
           host.unlock
-          host.stop_ssh_master_connection
         end
       end
     end
