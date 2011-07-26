@@ -61,6 +61,7 @@ class Runner
 
   def run
     @host_manager.unlock_on_exit
+    @host_manager.start_ssh_master_connections
     sync_working_copy_to_temp_location
     hosts = []
 
@@ -184,6 +185,14 @@ class Runner
             host.unlock
           rescue Exception
           end
+        end
+      end
+    end
+
+    def start_ssh_master_connections
+      all.each do |host|
+        fork do
+          host.start_ssh_master_connection
         end
       end
     end
