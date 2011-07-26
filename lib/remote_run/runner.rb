@@ -188,12 +188,11 @@ class Runner
           Runner.log("stopping cleanly...")
           sleep(1)
         end
-
-        clean_up_ssh_connections
       end
 
       Signal.trap("TERM") do
         puts "Trapped Term" * 1000
+        clean_up_ssh_connections
       end
     end
 
