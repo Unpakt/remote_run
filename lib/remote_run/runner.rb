@@ -174,13 +174,11 @@ class Runner
 
     def unlock_on_exit
       at_exit do
-        puts "at_exit" * 1000
         duped_hosts = all.map { |host| host.dup }
         duped_hosts.each do |host|
           begin
             host.unlock
-          rescue Errno::EPIPE
-            puts "broken pipe..."
+          rescue Exception
           end
         end
 
@@ -188,16 +186,16 @@ class Runner
           Runner.log("stopping cleanly...")
           sleep(1)
         end
-      end
 
-      Signal.trap("TERM") do
-        puts "Trapped Term" * 1000
         clean_up_ssh_connections
       end
     end
 
     def clean_up_ssh_connections
-      system("ps aux | grep ControlMaster | awk '{ print $2;}' | xargs kill")
+      begin
+        system("ps aux | grep ControlMaster | awk '{ print $2;}' | xargs kill")
+      rescue Exception
+      end
     end
   end
 
