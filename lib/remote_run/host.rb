@@ -37,7 +37,7 @@ class Host
   end
 
   def start_ssh_master_connection
-    system("ssh #{SSH_CONFIG} #{ssh_host_and_user} -M")
+    system("ssh #{SSH_CONFIG} #{ssh_host_and_user} -M &> /dev/null")
   end
 
   private
