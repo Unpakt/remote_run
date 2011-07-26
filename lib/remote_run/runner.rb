@@ -183,7 +183,7 @@ class Runner
         all.each do |host|
           begin
             host.unlock
-          rescue Exception
+          rescue Errno::EPIPE
           end
         end
       end
