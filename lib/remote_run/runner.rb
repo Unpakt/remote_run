@@ -176,7 +176,11 @@ class Runner
       at_exit do
         duped_hosts = all.map { |host| host.dup }
         duped_hosts.each do |host|
-          host.unlock
+          begin
+            host.unlock
+          rescue Errno::EPIPE
+            puts "broken pipe..."
+          end
         end
 
         3.times do
