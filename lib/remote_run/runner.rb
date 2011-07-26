@@ -181,13 +181,6 @@ class Runner
           rescue Exception
           end
         end
-
-        3.times do
-          Runner.log("stopping cleanly...")
-          sleep(1)
-        end
-
-        clean_up_ssh_connections
       end
     end
 

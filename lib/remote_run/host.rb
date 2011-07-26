@@ -40,7 +40,9 @@ class Host
   private
 
   def start_ssh_master_connection
-    system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'while true; do sleep 1; done' &")
+    fork do
+      system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'while true; do sleep 1; done'")
+    end
   end
 
   def ssh_host_and_user
