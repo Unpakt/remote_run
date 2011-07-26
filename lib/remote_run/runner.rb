@@ -61,6 +61,7 @@ class Runner
 
   def run
     @host_manager.unlock_on_exit
+    @host_manager.start_ssh_master_connections
     sync_working_copy_to_temp_location
     hosts = []
 
@@ -78,11 +79,16 @@ class Runner
         if host.lock
           task = @task_manager.find_task
           @children << fork do
-            this_host = host.dup
-            status = this_host.run(task)
-            host.unlock
-            Runner.log("#{host.hostname} failed.", :red) if status != 0
-            Process.exit!(status)
+            begin
+              this_host = host.dup
+              status = this_host.run(task)
+              host.unlock
+              Runner.log("#{host.hostname} failed.", :red) if status != 0
+            rescue Errno::EPIPE
+              Runner.log("broken pipe on #{host.hostname}...")
+            ensure
+              Process.exit!(status)
+            end
           end
         end
       end
@@ -174,10 +180,19 @@ class Runner
 
     def unlock_on_exit
       at_exit do
-        duped_hosts = all.map { |host| host.dup }
-        duped_hosts.each do |host|
-          host.unlock
-          host.stop_ssh_master_connection
+        all.each do |host|
+          begin
+            host.unlock
+          rescue Errno::EPIPE
+          end
+        end
+      end
+    end
+
+    def start_ssh_master_connections
+      all.each do |host|
+        fork do
+          host.start_ssh_master_connection
         end
       end
     end
