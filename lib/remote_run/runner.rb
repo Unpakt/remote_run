@@ -184,7 +184,7 @@ class Runner
         end
 
         3.times do
-          Remote.log("stopping cleanly...")
+          Runner.log("stopping cleanly...")
           sleep(1)
         end
 
