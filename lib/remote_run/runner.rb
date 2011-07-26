@@ -178,7 +178,18 @@ class Runner
         duped_hosts.each do |host|
           host.unlock
         end
+
+        3.times do
+          Remote.log("stopping cleanly...")
+          sleep(1)
+        end
+
+        clean_up_ssh_connections
       end
+    end
+
+    def clean_up_ssh_connections
+      system("ps aux | grep ControlMaster | awk '{ print $2;}' | xargs kill")
     end
   end
 
