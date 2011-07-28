@@ -136,7 +136,8 @@ class Runner
 
   def sync_working_copy_to_temp_location
     Runner.log("Creating temporary copy of #{@local_path} in #{@temp_path}...")
-    system("rsync -a #{@local_path}/ #{@temp_path}/")
+    excludes = rsync_exclude.map { |dir| "--exclude '#{dir}'"}
+    system("rsync #{excludes.join(" ")} -a #{@local_path}/ #{@temp_path}/")
     Runner.log("Done.")
   end
 
