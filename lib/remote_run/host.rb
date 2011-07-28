@@ -21,8 +21,23 @@ class Host
   end
 
   def run(task)
-    return FAIL unless copy_codebase
-    run_task(task)
+    Runner.log("Running '#{task}' on #{@hostname}", :white)
+    command = %Q{ssh #{SSH_CONFIG} #{ssh_host_and_user} 'cd #{$runner.remote_path}; #{task}' 2>&1}
+    system(command)
+    $?.exitstatus
+  end
+
+  def copy_codebase
+    Runner.log("Copying from #{$runner.temp_path} to #{@hostname}:#{$runner.remote_path}", :yellow)
+    system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'mkdir -p #{$runner.remote_path}'")
+    excludes = $runner.rsync_exclude.map { |dir| "--exclude '#{dir}'"}
+    if system(%{rsync --rsh='ssh #{SSH_CONFIG}' --delete-excluded #{excludes.join(" ")} --timeout=60 -a #{$runner.temp_path}/ #{ssh_host_and_user}:#{$runner.remote_path}/})
+      Runner.log("Finished copying to #{@hostname}", :green)
+      return true
+    else
+      Runner.log("rsync failed on #{@hostname}.", :red)
+      return false
+    end
   end
 
   def is_up?
@@ -52,26 +67,6 @@ class Host
 
   def locked_by_me?
     @lock_file.locked_by_me?
-  end
-
-  def copy_codebase
-    Runner.log("Copying from #{$runner.temp_path} to #{@hostname}:#{$runner.remote_path}", :yellow)
-    system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'mkdir -p #{$runner.remote_path}'")
-    excludes = $runner.rsync_exclude.map { |dir| "--exclude '#{dir}'"}
-    if system(%{rsync --rsh='ssh #{SSH_CONFIG}' --delete-excluded #{excludes.join(" ")} --timeout=60 -a #{$runner.temp_path}/ #{ssh_host_and_user}:#{$runner.remote_path}/})
-      Runner.log("Finished copying to #{@hostname}", :green)
-      return true
-    else
-      Runner.log("rsync failed on #{@hostname}.", :red)
-      return false
-    end
-  end
-
-  def run_task(task)
-    Runner.log("Running '#{task}' on #{@hostname}", :white)
-    command = %Q{ssh #{SSH_CONFIG} #{ssh_host_and_user} 'cd #{$runner.remote_path}; #{task}' 2>&1}
-    system(command)
-    $?.exitstatus
   end
 
   class LockFile
