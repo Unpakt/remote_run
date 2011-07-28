@@ -81,6 +81,10 @@ class Runner
           @children << fork do
             begin
               this_host = host.dup
+              unless this_host.copy_codebase
+                @task_manager.add(task)
+                exit(0)
+              end
               status = this_host.run(task)
               host.unlock
               Runner.log("#{host.hostname} failed.", :red) if status != 0
