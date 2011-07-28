@@ -83,7 +83,7 @@ class Runner
               this_host = host.dup
               unless this_host.copy_codebase
                 @task_manager.add(task)
-                exit(0)
+                status = 0
               end
               status = this_host.run(task)
               host.unlock
