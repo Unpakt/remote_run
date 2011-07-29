@@ -30,7 +30,7 @@ class Host
   def copy_codebase
     Runner.log("Copying from #{$runner.temp_path} to #{@hostname}:#{$runner.remote_path}", :yellow)
     system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'mkdir -p #{$runner.remote_path}'")
-    excludes = $runner.rsync_exclude.map { |dir| "--exclude '#{dir}'"}
+    excludes = $runner.exclude.map { |dir| "--exclude '#{dir}'"}
     if system(%{rsync --rsh='ssh #{SSH_CONFIG}' --delete-excluded #{excludes.join(" ")} --timeout=60 -a #{$runner.temp_path}/ #{ssh_host_and_user}:#{$runner.remote_path}/})
       Runner.log("Finished copying to #{@hostname}", :green)
       return true

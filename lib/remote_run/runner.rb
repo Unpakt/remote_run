@@ -1,5 +1,5 @@
 class Runner
-  attr_accessor :remote_path, :local_path, :login_as, :rsync_exclude, :logging, :temp_path
+  attr_accessor :remote_path, :local_path, :login_as, :exclude, :temp_path
   attr_reader :local_hostname, :identifier
   @@start_time = Time.now
 
@@ -8,15 +8,15 @@ class Runner
     @host_manager = HostManager.new
 
     # config options
-    @identifier = `echo $RANDOM`.strip
-    @local_hostname = `hostname`.strip
     @local_path = Dir.getwd
     @login_as = `whoami`.strip
     @remote_path = "/tmp/remote"
-    @rsync_exclude = []
+    @exclude = []
     @temp_path = "/tmp/remote"
 
     # used in the runner
+    @identifier = `echo $RANDOM`.strip
+    @local_hostname = `hostname`.strip
     @results = []
     @children = []
     @failed = []
