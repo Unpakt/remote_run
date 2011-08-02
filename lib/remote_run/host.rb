@@ -23,15 +23,15 @@ class Host
   def run(task)
     Runner.log("Running '#{task}' on #{@hostname}", :white)
     command = %Q{ssh #{SSH_CONFIG} #{ssh_host_and_user} 'cd #{$runner.remote_path}; #{task}' 2>&1}
-    system(command)
+    Runner.system(command)
     $?.exitstatus
   end
 
   def copy_codebase
     Runner.log("Copying from #{$runner.temp_path} to #{@hostname}:#{$runner.remote_path}", :yellow)
-    system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'mkdir -p #{$runner.remote_path}'")
+    Runner.system("ssh #{SSH_CONFIG} #{ssh_host_and_user} 'mkdir -p #{$runner.remote_path}'")
     excludes = $runner.exclude.map { |dir| "--exclude '#{dir}'"}
-    if system(%{rsync --rsh='ssh #{SSH_CONFIG}' --delete-excluded #{excludes.join(" ")} --timeout=60 -a #{$runner.temp_path}/ #{ssh_host_and_user}:#{$runner.remote_path}/})
+    if Runner.system(%{rsync --rsh='ssh #{SSH_CONFIG}' --delete-excluded #{excludes.join(" ")} --timeout=60 -a #{$runner.temp_path}/ #{ssh_host_and_user}:#{$runner.remote_path}/})
       Runner.log("Finished copying to #{@hostname}", :green)
       return true
     else
@@ -52,7 +52,7 @@ class Host
   end
 
   def start_ssh_master_connection
-    system("ssh #{SSH_CONFIG} #{ssh_host_and_user} -M &> /dev/null")
+    Runner.system("ssh #{SSH_CONFIG} #{ssh_host_and_user} -M &> /dev/null")
   end
 
   private
@@ -122,7 +122,7 @@ class Host
       end
 
       def run_and_test(command)
-        system("ssh #{Host::SSH_CONFIG} #{$runner.login_as}@#{@hostname} '#{command}'")
+        Runner.system("ssh #{Host::SSH_CONFIG} #{$runner.login_as}@#{@hostname} '#{command}'")
       end
     end
   end

@@ -26,6 +26,13 @@ class Runner
     yield self
   end
 
+  def self.system(command)
+    IO.popen(command) do |io|
+      puts io.readline until io.eof?
+    end
+    $?.success?
+  end
+
   def self.run(&block)
     @@start_time = Time.now
     runner = new(&block)
@@ -137,7 +144,7 @@ class Runner
   def sync_working_copy_to_temp_location
     Runner.log("Creating temporary copy of #{@local_path} in #{@temp_path}...")
     excludes = exclude.map { |dir| "--exclude '#{dir}'"}
-    system("rsync #{excludes.join(" ")} -a #{@local_path}/ #{@temp_path}/")
+    self.class.system("rsync #{excludes.join(" ")} -a #{@local_path}/ #{@temp_path}/")
     Runner.log("Done.")
   end
 
