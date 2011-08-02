@@ -2,6 +2,7 @@ class Runner
   attr_accessor :remote_path, :local_path, :login_as, :exclude, :temp_path
   attr_reader :local_hostname, :identifier
   @@start_time = Time.now
+  @@stty_config = `stty -g`
 
   def initialize
     @task_manager = TaskManager.new
@@ -40,6 +41,7 @@ class Runner
 
   def self.log(message, color = :yellow)
     highline = HighLine.new
+    system("stty #{@@stty_config}")
     highline.say(highline.color("[Remote #{run_time}] #{message}", color))
   end
 
