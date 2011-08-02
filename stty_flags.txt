@@ -1,0 +1,14 @@
+speed 9600 baud;
+lflags: -iexten echoe echok echoke echoctl
+iflags: -ixany ignpar
+oflags: -oxtabs
+cflags: cs8 -parenbdiscard lnext
+<undef> <undef>
+
+speed 9600 baud;
+lflags: -icanon -isig -iexten -echo echoke echoctl
+iflags: -icrnl -ixon -ixany ignpar
+oflags: -opost -oxtabs
+cflags: cs8 -parenb
+discard lnext
+<undef> <undef>
