@@ -122,7 +122,7 @@ class Host
       end
 
       def run_and_test(command)
-        system("ssh #{Host::SSH_CONFIG} #{$runner.login_as}@#{@hostname} '#{command}'")
+        system("ssh #{Host::SSH_CONFIG} #{$runner.login_as}@#{@hostname} '#{command}' 2>/dev/null")
       end
     end
   end
