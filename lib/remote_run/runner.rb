@@ -41,7 +41,7 @@ class Runner
 
   def self.log(message, color = :yellow)
     highline = HighLine.new
-    system("stty #{@@stty_config}")
+    system("stty #{@@stty_config} 2>/dev/null")
     highline.say(highline.color("[Remote #{run_time}] #{message}", color))
   end
 
