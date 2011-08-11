@@ -73,14 +73,8 @@ describe Host do
       `ssh localhost 'rm -rf /tmp/testing-remote-run'`
       host.lock
     end
-    let(:host) { Host.new("localhost") }
 
-    it "copies the codebase to a remote directory" do
-      $runner.remote_path = "/tmp/testing-remote-run"
-      `ssh localhost 'test -e /tmp/testing-remote-run'; echo $?`.strip.should_not == "0"
-      host.run("date > /dev/null")
-      `ssh localhost 'test -e /tmp/testing-remote-run'; echo $?`.strip.should == "0"
-    end
+    let(:host) { Host.new("localhost") }
 
     context "when executing a shell command with a zero status code" do
       it "returns zero" do
@@ -92,6 +86,22 @@ describe Host do
       it "returns non-zero status code" do
         host.run("cat /foo/bar 2>/dev/null").should_not == 0
       end
+    end
+  end
+
+  describe "#copy_codebase" do
+    before do
+      `ssh localhost 'rm -rf /tmp/testing-remote-run'`
+      host.lock
+    end
+
+    let(:host) { Host.new("localhost") }
+
+    it "copies the codebase to a remote directory" do
+      $runner.remote_path = "/tmp/testing-remote-run"
+      `ssh localhost 'test -e /tmp/testing-remote-run'; echo $?`.strip.should_not == "0"
+      host.copy_codebase
+      `ssh localhost 'test -e /tmp/testing-remote-run'; echo $?`.strip.should == "0"
     end
   end
 end

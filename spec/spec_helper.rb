@@ -6,7 +6,6 @@ require Dir.pwd + '/lib/remote_run'
 Runner.new do |config|
   config.tasks = []
   config.hosts = []
-  config.logging = false
 end
 
 RSpec.configure do |config|
