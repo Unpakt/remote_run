@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-describe Host do
+describe RemoteRun::Host do
   context "when locking" do
-    let(:host) { Host.new("localhost") }
+    let(:host) { RemoteRun::Host.new("localhost") }
 
     it "can be locked" do
       host.lock.should be_true
@@ -21,9 +21,9 @@ describe Host do
 
   context "when locked by someone else" do
     before { lock_file.get }
-    let(:host) { Host.new("localhost") }
+    let(:host) { RemoteRun::Host.new("localhost") }
     let(:lock_file) {
-      lock_file = Host::LockFile.new("localhost", "myfakelocalhost", "999")
+      lock_file = RemoteRun::Host::LockFile.new("localhost", "myfakelocalhost", "999")
     }
 
     it "cannot be unlocked by me" do
@@ -33,7 +33,7 @@ describe Host do
 
   context "when locked by me" do
     before { host.lock }
-    let(:host) { Host.new("localhost") }
+    let(:host) { RemoteRun::Host.new("localhost") }
 
     it "cannot be locked" do
       host.lock.should be_false
@@ -52,7 +52,7 @@ describe Host do
 
   context "when checking to see if a host is up" do
     context "when using an authorized host" do
-      let(:host) { Host.new("localhost") }
+      let(:host) { RemoteRun::Host.new("localhost") }
 
       it "returns true" do
         host.is_up?.should be_true
@@ -60,7 +60,7 @@ describe Host do
     end
 
     context "when using an unauthorized host" do
-      let(:host) { Host.new("foozmcbarry") }
+      let(:host) { RemoteRun::Host.new("foozmcbarry") }
 
       it "returns false" do
         host.is_up?.should be_false
@@ -74,7 +74,7 @@ describe Host do
       host.lock
     end
 
-    let(:host) { Host.new("localhost") }
+    let(:host) { RemoteRun::Host.new("localhost") }
 
     context "when executing a shell command with a zero status code" do
       it "returns zero" do
@@ -95,7 +95,7 @@ describe Host do
       host.lock
     end
 
-    let(:host) { Host.new("localhost") }
+    let(:host) { RemoteRun::Host.new("localhost") }
 
     it "copies the codebase to a remote directory" do
       $runner.remote_path = "/tmp/testing-remote-run"
