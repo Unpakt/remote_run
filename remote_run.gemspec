@@ -6,9 +6,9 @@ Gem::Specification.new do |s|
   s.name        = "remote_run"
   s.version     = RemoteRun::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["Adam Berlin"]
-  s.email       = ["berlin.ab@gmail.com"]
-  s.homepage    = ""
+  s.authors     = ["Case Commons, LLC"]
+  s.email       = ["casecommons-dev@googlegroups.com"]
+  s.homepage    = "https://github.com/Casecommons/remote_run"
   s.summary     = %q{Run N shell scripts on a pool of remote hosts}
   s.description = %q{Can be used as a parallel unit test runner}
 
@@ -19,4 +19,5 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
   s.add_runtime_dependency("highline")
+  s.add_development_dependency('rspec')
 end
