@@ -139,7 +139,7 @@ module RemoteRun
     end
 
     def task_is_finished?(pid)
-      Process.waitpid(child_pid, Process::WNOHANG)
+      Process.waitpid(pid, Process::WNOHANG)
     end
 
     def display_log
