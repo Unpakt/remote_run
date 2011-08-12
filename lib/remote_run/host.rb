@@ -5,7 +5,6 @@ module RemoteRun
     PASS = 0
     SSH_CONFIG = " -o ControlMaster=auto -o ControlPath=~/.ssh/master-%l-%r@%h:%p -o NumberOfPasswordPrompts=0 -o StrictHostKeyChecking=no -4 "
     attr_reader :hostname
-    attr_reader :lock_file
 
     def initialize(hostname)
       @hostname = hostname
@@ -24,7 +23,6 @@ module RemoteRun
 
     def run(task)
       command = %Q{ssh #{SSH_CONFIG} #{ssh_host_and_user} 'cd #{$runner.remote_path}; #{task}' 2>&1}
-      puts command
       system(command)
       $?.exitstatus
     end

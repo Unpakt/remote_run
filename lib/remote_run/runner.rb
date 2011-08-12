@@ -7,10 +7,23 @@ module RemoteRun
       @failed = []
       @stty_config = `stty -g`
       @last_timestamp = Time.now.strftime("%S")[0]
+      @hosts = []
 
       @task_manager = @configuration.task_manager
       @host_manager = @configuration.host_manager
+      @starting_number_of_tasks = @task_manager.count
     end
+
+    def run
+      unlock_on_exit
+      start_ssh_master_connections
+      sync_working_copy_to_temp_location
+      start_tasks
+      wait_for_tasks_to_finish
+      handle_results
+    end
+
+    private
 
     def unlock_on_exit
       at_exit do
@@ -29,52 +42,33 @@ module RemoteRun
       end
     end
 
-    def run
-      unlock_on_exit
-      start_ssh_master_connections
-      sync_working_copy_to_temp_location
-      hosts = []
+    def sync_working_copy_to_temp_location
+      log("Creating temporary copy of #{@configuration.local_path} in #{@configuration.temp_path}...")
+      excludes = @configuration.exclude.map { |dir| "--exclude '#{dir}'"}
+      system("rsync --delete --delete-excluded #{excludes.join(" ")} -aq #{@configuration.local_path}/ #{@configuration.temp_path}/")
+      log("Done.")
+    end
 
+    def start_tasks
       log("Starting tasks... #{Time.now}")
 
-      @starting_number_of_tasks = @task_manager.count
       while @task_manager.has_more_tasks?
-        hosts = @host_manager.hosts.dup if hosts.empty?
-
         display_log
         check_for_finished
-
-        if host = hosts.sample
-          hosts.delete(host)
-          if host.lock
-            task = @task_manager.find_task
-            @children << fork do
-              begin
-                this_host = host.dup
-                unless this_host.copy_codebase
-                  @task_manager.add(task)
-                  status = 0
-                end
-                status = this_host.run(task.command)
-                host.unlock
-                log("#{host.hostname} failed.", :red) if status != 0
-              rescue Errno::EPIPE
-                log("broken pipe on #{host.hostname}...")
-              ensure
-                Process.exit!(status)
-              end
-            end
-          end
-        end
+        find_lock_and_start
       end
 
       log("All tasks started... #{Time.now}")
+    end
 
+    def wait_for_tasks_to_finish
       while @children.length > 0
         display_log
         check_for_finished
       end
+    end
 
+    def handle_results
       failed_tasks = @results.select { |result| result != 0 }
       status_code = if failed_tasks.length == 0
         log("Task passed.", :green)
@@ -84,8 +78,40 @@ module RemoteRun
         Host::FAIL
       end
 
-      log("Total Time: #{self.run_time} minutes.")
+      log("Total Time: #{run_time} minutes.")
       status_code
+    end
+
+    def start_task(host)
+      task = @task_manager.find_task
+      @children << fork do
+        start_forked_task(host, task)
+      end
+    end
+
+    def start_forked_task(host, task)
+      begin
+        this_host = host.dup
+        unless this_host.copy_codebase
+          @task_manager.add(task)
+          status = 0
+        end
+        status = this_host.run(task.command)
+        host.unlock
+      rescue Errno::EPIPE
+      ensure
+        Process.exit!(status)
+      end
+    end
+
+    def find_lock_and_start
+      @hosts = @host_manager.hosts.dup if @hosts.empty?
+      if host = @hosts.sample
+        @hosts.delete(host)
+        if host.lock
+          start_task(host)
+        end
+      end
     end
 
     def run_time
@@ -116,26 +142,14 @@ module RemoteRun
       sleep(0.5)
     end
 
-    def sync_working_copy_to_temp_location
-      log("Creating temporary copy of #{@configuration.local_path} in #{@configuration.temp_path}...")
-      excludes = @configuration.exclude.map { |dir| "--exclude '#{dir}'"}
-      system("rsync --delete --delete-excluded #{excludes.join(" ")} -aq #{@configuration.local_path}/ #{@configuration.temp_path}/")
-      log("Done.")
-    end
-
     def display_log
       now = Time.now.strftime("%S")[0]
       unless now == @last_timestamp
-        display_status("Waiting on #{@task_manager.count} of #{@starting_number_of_tasks} tasks to start.") if @task_manager.count > 0
-        display_status("Waiting on #{@children.length} of #{@starting_number_of_tasks - @task_manager.count} started tasks to finish. #{@failed.size} failed.") if @children.length > 0
+        log("Waiting on #{@task_manager.count} of #{@starting_number_of_tasks} tasks to start.") if @task_manager.count > 0
+        log("Waiting on #{@children.length} of #{@starting_number_of_tasks - @task_manager.count} started tasks to finish. #{@failed.size} failed.") if @children.length > 0
         $stdout.flush
         @last_timestamp = now
       end
     end
-
-    def display_status(message)
-      log(message, :yellow)
-    end
   end
 end
-

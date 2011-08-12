@@ -69,7 +69,6 @@ module RemoteRun
         end
         @hosts
       end
-
     end
 
     class TaskManager
