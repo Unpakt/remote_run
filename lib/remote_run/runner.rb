@@ -139,7 +139,6 @@ module RemoteRun
           @children.delete(child_pid)
         end
       end
-      sleep(0.5)
     end
 
     def display_log
