@@ -1,4 +1,3 @@
-require 'ruby-debug'
 module RemoteRun
   class Host
     FAIL = 1
