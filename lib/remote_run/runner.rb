@@ -15,7 +15,7 @@ module RemoteRun
     end
 
     def run
-      unlock_on_exit
+      setup_unlock_on_exit
       start_ssh_master_connections
       sync_working_copy_to_temp_location
       start_tasks
@@ -25,7 +25,7 @@ module RemoteRun
 
     private
 
-    def unlock_on_exit
+    def setup_unlock_on_exit
       at_exit do
         @configuration.hosts.each do |host|
           begin
@@ -130,15 +130,16 @@ module RemoteRun
 
     def check_for_finished
       @children.each do |child_pid|
-        if Process.waitpid(child_pid, Process::WNOHANG)
-          if $?.exitstatus != 0
-            @failed << child_pid
-          end
-
+        if task_is_finished?(child_pid)
+          @failed << child_pid unless $?.success?
           @results << $?.exitstatus
           @children.delete(child_pid)
         end
       end
+    end
+
+    def task_is_finished?(pid)
+      Process.waitpid(child_pid, Process::WNOHANG)
     end
 
     def display_log
