@@ -1,5 +1,7 @@
 module RemoteRun
   class Runner
+    attr_reader :children
+
     def initialize(configuration)
       @configuration = configuration
       @results = []
@@ -15,6 +17,7 @@ module RemoteRun
     end
 
     def run
+      setup_child_cleanup
       setup_unlock_on_exit
       start_ssh_master_connections
       sync_working_copy_to_temp_location
@@ -24,6 +27,14 @@ module RemoteRun
     end
 
     private
+
+    def setup_child_cleanup
+      at_exit do
+        children.each do |child_pid|
+          Process.kill("TERM", child_pid)
+        end
+      end
+    end
 
     def setup_unlock_on_exit
       at_exit do
@@ -62,7 +73,7 @@ module RemoteRun
     end
 
     def wait_for_tasks_to_finish
-      while @children.length > 0
+      while children.length > 0
         display_log
         check_for_finished
       end
@@ -84,7 +95,8 @@ module RemoteRun
 
     def start_task(host)
       task = @task_manager.find_task
-      @children << fork do
+      children << fork do
+        puts "Parent of child: #{Process.ppid}"
         start_forked_task(host, task)
       end
     end
@@ -99,6 +111,7 @@ module RemoteRun
         status = this_host.run(task.command)
         host.unlock
       rescue Errno::EPIPE
+        Process.exit!(1)
       ensure
         Process.exit!(status)
       end
@@ -129,11 +142,11 @@ module RemoteRun
     end
 
     def check_for_finished
-      @children.each do |child_pid|
+      children.each do |child_pid|
         if task_is_finished?(child_pid)
           @failed << child_pid unless $?.success?
           @results << $?.exitstatus
-          @children.delete(child_pid)
+          children.delete(child_pid)
         end
       end
     end
