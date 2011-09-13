@@ -37,9 +37,7 @@ module RemoteRun
     end
 
     def start_ssh_master_connections
-      @configuration.hosts.each do |host|
-        host.start_ssh_master_connection
-      end
+      @host_manager.start_ssh_master_connections
     end
 
     def sync_working_copy_to_temp_location

@@ -1,11 +1,12 @@
 require 'spec_helper'
 
 describe RemoteRun::Configuration::HostManager do
+  let(:host) { double(:host, is_up?: true, name: "foobar") }
   subject { RemoteRun::Configuration::HostManager.new }
 
   describe "#add" do
     it "adds the given host to a list of hosts" do
-      subject.add(stub(:host, :is_up? => true, :name => "foobar"))
+      subject.add(host)
       subject.hosts.size.should == 1
       subject.hosts.first.name.should == "foobar"
     end
@@ -13,7 +14,6 @@ describe RemoteRun::Configuration::HostManager do
 
   describe "#hosts" do
     it "returns all hosts in the list" do
-      host = stub(:host, :is_up? => true, :name => "foobar")
       subject.add(host)
       subject.hosts.should == [host]
     end
@@ -21,12 +21,11 @@ describe RemoteRun::Configuration::HostManager do
 
   describe "#start_ssh_master_connections" do
     before do
-      @host = stub(:host, :is_up? => true, :name => "foobar")
-      subject.add(@host)
+      subject.add(host)
     end
 
     it "asks each host to start their ssh master connection" do
-      @host.should_receive(:start_ssh_master_connection)
+      host.should_receive(:start_ssh_master_connection)
       subject.start_ssh_master_connections
     end
   end

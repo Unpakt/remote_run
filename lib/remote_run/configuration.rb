@@ -69,6 +69,12 @@ module RemoteRun
         end
         @hosts
       end
+
+      def start_ssh_master_connections
+        hosts.each do |host|
+          host.start_ssh_master_connection
+        end
+      end
     end
 
     class TaskManager
