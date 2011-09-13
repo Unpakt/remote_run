@@ -7,17 +7,10 @@ describe RemoteRun::Runner do
   subject { RemoteRun::Runner.new(configuration) }
   it { should be }
 
-  describe "#run" do
-    before do
-      subject.stub(:setup_unlock_on_exit)
-      subject.stub(:sync_working_copy_to_temp_location)
-      subject.stub(:start_tasks)
-      subject.stub(:handle_results)
-    end
-
-    it "should start ssh connections" do
+  describe "#start_ssh_master_connections" do
+    it "should delegate to the host manager" do
       host_manager.should_receive(:start_ssh_master_connections)
-      subject.run
+      subject.start_ssh_master_connections
     end
   end
 end

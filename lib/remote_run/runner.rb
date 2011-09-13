@@ -23,8 +23,6 @@ module RemoteRun
       handle_results
     end
 
-    private
-
     def setup_unlock_on_exit
       at_exit do
         @configuration.hosts.each do |host|
