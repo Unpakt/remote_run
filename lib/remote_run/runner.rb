@@ -82,9 +82,10 @@ module RemoteRun
 
     def start_task(host)
       task = @task_manager.find_task
-      @children << fork do
+      task.pid = fork do
         start_forked_task(host, task)
       end
+      @children << task
     end
 
     def start_forked_task(host, task)
@@ -127,11 +128,12 @@ module RemoteRun
     end
 
     def check_for_finished
-      @children.each do |child_pid|
+      @children.each do |task|
+        child_pid = task.pid
         if task_is_finished?(child_pid)
           @failed << child_pid unless $?.success?
           @results << $?.exitstatus
-          @children.delete(child_pid)
+          @children.delete(task)
         end
       end
     end
