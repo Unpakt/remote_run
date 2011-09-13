@@ -83,6 +83,7 @@ module RemoteRun
       task.pid = fork do
         start_forked_task(host, task)
       end
+      task.host = host
       @children << task
     end
 
@@ -129,7 +130,10 @@ module RemoteRun
       @children.each do |task|
         child_pid = task.pid
         if task_is_finished?(child_pid)
-          @failed << child_pid unless $?.success?
+          unless $?.success?
+            @failed << child_pid
+            log("Task '#{task.command}' failed on #{task.host.hostname}")
+          end
           @results << $?.exitstatus
           @children.delete(task)
         end

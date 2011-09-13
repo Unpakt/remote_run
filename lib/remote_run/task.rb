@@ -1,8 +1,8 @@
 module RemoteRun
   class Task
-    attr_accessor :command, :pid
+    attr_accessor :command, :pid, :host
 
-    def initialize(command)
+    def initialize(command = nil)
       @command = command
     end
   end

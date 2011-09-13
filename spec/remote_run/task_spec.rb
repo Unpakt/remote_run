@@ -11,4 +11,10 @@ describe RemoteRun::Task do
     before { subject.pid = pid }
     its(:pid) { should == pid }
   end
+
+  describe "host attribute" do
+    let(:host) { double(:host) }
+    before { subject.host = host }
+    its(:host) { should == host }
+  end
 end
