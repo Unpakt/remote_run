@@ -130,10 +130,6 @@ module RemoteRun
       @children.each do |task|
         child_pid = task.pid
         if task_is_finished?(child_pid)
-          unless $?.success?
-            @failed << child_pid
-            log("Task '#{task.command}' failed on #{task.host.hostname}")
-          end
           @results << $?.exitstatus
           @children.delete(task)
         end
@@ -145,7 +141,7 @@ module RemoteRun
     end
 
     def display_log
-      now = Time.now.strftime("%S")[0]
+      now = Time.now.strftime("%M")[0]
       unless now == @last_timestamp
         log("Waiting on #{@task_manager.count} of #{@starting_number_of_tasks} tasks to start.") if @task_manager.count > 0
         log("Waiting on #{@children.length} of #{@starting_number_of_tasks - @task_manager.count} started tasks to finish. #{@failed.size} failed.") if @children.length > 0
