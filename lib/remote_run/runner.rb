@@ -16,7 +16,6 @@ module RemoteRun
 
     def run
       setup_unlock_on_exit
-      start_ssh_master_connections
       sync_working_copy_to_temp_location
       start_tasks
       wait_for_tasks_to_finish
@@ -32,10 +31,6 @@ module RemoteRun
           end
         end
       end
-    end
-
-    def start_ssh_master_connections
-      @host_manager.start_ssh_master_connections
     end
 
     def sync_working_copy_to_temp_location
