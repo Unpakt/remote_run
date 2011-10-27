@@ -59,9 +59,9 @@ module RemoteRun
 
     def wait_for_tasks_to_finish
       while @children.length > 0
-        sleep(1)
         display_log
         check_for_finished
+        sleep(1)
       end
     end
 
@@ -142,7 +142,7 @@ module RemoteRun
     end
 
     def display_log
-      now = Time.now.strftime("%M")[0]
+      now = Time.now.strftime("%M")[1]
       unless now == @last_timestamp
         log("Waiting on #{@task_manager.count} of #{@starting_number_of_tasks} tasks to start.") if @task_manager.count > 0
         log("Waiting on #{@children.length} of #{@starting_number_of_tasks - @task_manager.count} started tasks to finish. #{@failed.size} failed.") if @children.length > 0
