@@ -59,6 +59,7 @@ module RemoteRun
 
     def wait_for_tasks_to_finish
       while @children.length > 0
+        sleep(1)
         display_log
         check_for_finished
       end
