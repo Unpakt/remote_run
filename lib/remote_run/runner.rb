@@ -56,7 +56,6 @@ module RemoteRun
       while @children.length > 0
         display_log
         check_for_finished
-        sleep(1)
       end
     end
 
