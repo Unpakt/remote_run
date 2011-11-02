@@ -122,6 +122,7 @@ module RemoteRun
     end
 
     def check_for_finished
+      sleep(0.1)
       @children.each do |task|
         child_pid = task.pid
         if task_is_finished?(child_pid)
